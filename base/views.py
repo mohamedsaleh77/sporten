@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect ,get_object_or_404
 from django.http import JsonResponse
 from .models import *
 from datetime import datetime
+import json 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
@@ -71,18 +72,65 @@ def bookingPage(request, pk):
 # Booking Related
 def dateSelected(request, date):
     date_obj = datetime.strptime(date, "%Y-%m-%d").date()
-    bookings = BookingCourt.objects.filter(startTime__date(date_obj))
-    booking_data = list(bookings.values())
+    bookings = BookingCourt.objects.filter(startTime__date=date_obj)
+    booking_data = list(bookings.values()) 
+    print(booking_data)
+    
     return JsonResponse({'bookings': booking_data})
 
 def createBooking(request):
-    print('Received Request')
+    print("Received")
     if request.method == 'POST':
-        # Get the JSON data from the request body
-        booking_data = request.POST.get('eventsArray[0]')
-        print(booking_data)
-    
-    return render(request, 'history.html')
+        try:
+            events_data = json.loads(request.POST.get('events', '[]'))
+            # Process the events_data as needed
+            print(events_data)  # For debugging purposes
+            
+            user = request.user
+            
+            # Create a new Booking instance
+            booking = Booking.objects.create(
+                userID=user,
+                price = 0.0,
+                status='PENDING'
+            )
+
+            booking_courts = []
+            total_fee = 0
+
+            for event in events_data:
+                resourceID = event['resourceId']
+                court = Court.objects.get(id=resourceID[0])
+                start_time = datetime.fromisoformat(event['start'])
+                end_time = datetime.fromisoformat(event['end']) if event['end'] else None
+
+                # Calculate duration and fee for the court
+                duration_hours = (end_time - start_time).total_seconds() / 3600
+                court_fee = duration_hours * float(court.rate)
+                total_fee += court_fee
+
+                # Create BookingCourt instance
+                booking_court = BookingCourt(
+                    booking=booking,
+                    court=court,
+                    startTime=start_time,
+                    endTime=end_time
+                )
+                booking_courts.append(booking_court)
+
+            # Bulk create all BookingCourt instances
+            BookingCourt.objects.bulk_create(booking_courts)
+
+            # Update the Booking with total price
+            booking.price = total_fee
+            booking.save()
+
+            return JsonResponse({'status': 'success'})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
 
 # Admin Related
 def is_admin(user):
