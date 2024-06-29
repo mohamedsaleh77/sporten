@@ -35,6 +35,7 @@ urlpatterns = [
     path('adminpanel/venues/update/<int:venue_id>/', views.update_venue, name='update_venue'),
     path('adminpanel/courts/delete/<int:court_id>/', views.delete_court, name='delete_court'),
     path('adminpanel/venues/delete/<int:venue_id>/', views.delete_venue, name='delete_venue'),
+    
 
    
 ]
