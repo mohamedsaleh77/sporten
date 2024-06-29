@@ -2,78 +2,7 @@
 {% load static %}
 
 {% block css %}
-    <style>
-        #calendar {
-            max-width: 900px;
-            flex: 1;
-            margin: 0 auto;
-            padding: 10px;
-        }
-        .container {
-            display: flex;
-            flex-direction: row;
-          }
-          
-          .calendar-container {
-            flex: 1;
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid #ddd;
-            overflow: hidden;
-          }
-          
-          .shopping-cart-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-          }
-          
-          .shopping-cart-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-          }
-          
-          .shopping-cart-modal-content {
-            position: relative;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            width: 80%;
-            margin: 40px auto;
-          }
-          
-          /* Mobile layout styles */
-          @media only screen and (max-width: 768px) {
-            .container {
-              flex-direction: column;
-            }
-            .shopping-cart-modal {
-              display: block;
-            }
-            .shopping-cart-modal-content {
-              width: 90%;
-              margin: 20px auto;
-            }
-          }
-          
-          /* Modal toggle styles */
-          #close-modal-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-          }
-          
-          #close-modal-btn:hover {
-            cursor: pointer;
-          }
-    </style>
+
 {% endblock css %}
 
 {% block headerjs %}
@@ -82,7 +11,6 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadCalendar();
         });
-
     </script>
 
 {% endblock headerjs %}
@@ -91,21 +19,7 @@
     {{ courts|json_script:"courts"|safe }}
     {{ holidays|json_script:"holidays"|safe }}
 
-    <div class="container">
-        <div class="calendar-container">
-          <div id="calendar"></div>
-        </div>
-        <button id="open-cart-btn">View Cart</button>
-        <div class="shopping-cart-modal">
-          <div class="shopping-cart-modal-overlay"></div>
-          <div class="shopping-cart-modal-content">
-            <h1>Shopping Cart</h1>
-            <ul id="cart-items"></ul>
-            <button id="checkout-btn">Checkout</button>
-            <button id="close-modal-btn">Close</button>
-          </div>
-        </div>
-      </div>
+        <div id="calendar"></div>
 
 {% endblock content %}
 
@@ -113,26 +27,6 @@
 <script>
     let calendar;
     let calendarEl;
-    // Get the modal container and overlay
-    const modal = document.querySelector('.shopping-cart-modal');
-    const overlay = document.querySelector('.shopping-cart-modal-overlay');
-
-    // Get the close button
-    const closeButton = document.getElementById('close-modal-btn');
-
-    // Add event listener to close button
-    closeButton.addEventListener('click', function() {
-    // Hide the modal and overlay
-    modal.style.display = 'none';
-    overlay.style.display = 'none';
-    });
-
-    // Add event listener to overlay (for clicking outside the modal)
-    overlay.addEventListener('click', function() {
-    // Hide the modal and overlay
-    modal.style.display = 'none';
-    overlay.style.display = 'none';
-    });
 
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -146,7 +40,8 @@
         calendarEl = document.getElementById('calendar');
         calendar = new FullCalendar.Calendar(calendarEl, {
             schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
-            initialView: 'dayGridMonth',
+            initialView: 'dayGridMonth', 
+            timeZone: 'UTC',
             selectable: true,
             selectOverlap: false,
             dateClick: function(info) {
@@ -157,7 +52,6 @@
                 var selectedDateStr = info.startStr;
                 return !holidayDates.includes(selectedDateStr);
             },
-            height: 600,
         });
 
         calendar.render();
@@ -218,7 +112,8 @@
     console.log('Event added:', tempEvent);
 
     // 4. Update the calendar view
-    calendar.render();  
+    calendar.render();
+    createBooking(); 
     }
 
     function createBooking(){
