@@ -1,10 +1,236 @@
 {% extends "adminpanel/base_admin.html" %}
 
 {% block title %}
-    <title>Dashboard</title>
+    <title>Admin Dashboard</title>
 {% endblock %}
 
 {% block content %}
-    <h1>Dashboard</h1>
-    <!-- Add dashboard content here -->
+<div class="container mt-5">
+    <h1>Admin Dashboard</h1>
+
+    <div class="row">
+        <!-- User Statistics -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    User Statistics
+                </div>
+                <div class="card-body">
+                    <canvas id="userStatisticsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Statistics -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    Booking Statistics
+                </div>
+                <div class="card-body">
+                    <canvas id="bookingStatisticsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Metrics -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    Financial Metrics
+                </div>
+                <div class="card-body">
+                    <canvas id="financialMetricsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <!-- Court Usage -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Court Usage
+                </div>
+                <div class="card-body">
+                    <canvas id="courtUsageChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Peak Booking Times -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Peak Booking Times
+                </div>
+                <div class="card-body">
+                    <canvas id="peakBookingTimesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Embed JSON data into the template -->
+<script id="bookingStatusData" type="application/json">{{ booking_status_distribution|safe }}</script>
+<script id="mostBookedCourtsData" type="application/json">{{ most_booked_courts|safe }}</script>
+<script id="bookingHoursPerCourtData" type="application/json">{{ booking_hours_per_court|safe }}</script>
+<script id="peakBookingTimesData" type="application/json">{{ peak_booking_times|safe }}</script>
+
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // User Statistics Chart
+        const userStatisticsCtx = document.getElementById('userStatisticsChart').getContext('2d');
+        const userStatisticsChart = new Chart(userStatisticsCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Total Users', 'New Users (Last Week)', 'Active Users'],
+                datasets: [{
+                    label: 'User Statistics',
+                    data: [{{ total_users }}, {{ new_users_last_week }}, {{ active_users }}],
+                    backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56'],
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: {
+                        color: 'white',
+                        formatter: function(value, context) {
+                            return value;
+                        }
+                    }
+                }
+            }
+        });
+
+        // Booking Status Distribution Chart
+        const bookingStatisticsCtx = document.getElementById('bookingStatisticsChart').getContext('2d');
+        const bookingStatusData = JSON.parse(document.getElementById('bookingStatusData').textContent);
+        const bookingStatisticsChart = new Chart(bookingStatisticsCtx, {
+            type: 'bar',
+            data: {
+                labels: bookingStatusData.map(status => status.status),
+                datasets: [{
+                    label: 'Booking Status Distribution',
+                    data: bookingStatusData.map(status => status.count),
+                    backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56'],
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: {
+                        color: 'black',
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: function(value, context) {
+                            return value;
+                        }
+                    }
+                }
+            }
+        });
+
+        // Financial Metrics Chart
+        const financialMetricsCtx = document.getElementById('financialMetricsChart').getContext('2d');
+        const financialMetricsChart = new Chart(financialMetricsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Total Revenue', 'Revenue (Last Week)', 'Average Booking Price'],
+                datasets: [{
+                    label: 'Financial Metrics',
+                    data: [{{ total_revenue }}, {{ revenue_last_week }}, {{ average_booking_price }}],
+                    backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56'],
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: {
+                        color: 'white',
+                        formatter: function(value, context) {
+                            return value;
+                        }
+                    }
+                }
+            }
+        });
+
+        // Court Usage Chart
+        const courtUsageCtx = document.getElementById('courtUsageChart').getContext('2d');
+        const bookingHoursPerCourtData = JSON.parse(document.getElementById('bookingHoursPerCourtData').textContent);
+        const courtUsageLabels = Object.keys(bookingHoursPerCourtData);
+        const courtUsageData = Object.values(bookingHoursPerCourtData);
+        const courtUsageChart = new Chart(courtUsageCtx, {
+            type: 'bar',
+            data: {
+                labels: courtUsageLabels,
+                datasets: [{
+                    label: 'Booking Hours per Court',
+                    data: courtUsageData,
+                    backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56'],
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    datalabels: {
+                        color: 'black',
+                        anchor: 'end',
+                        align: 'right',
+                        formatter: function(value, context) {
+                            return value;
+                        }
+                    }
+                }
+            }
+        });
+
+        // Peak Booking Times Chart
+        const peakBookingTimesCtx = document.getElementById('peakBookingTimesChart').getContext('2d');
+        const peakBookingTimesData = JSON.parse(document.getElementById('peakBookingTimesData').textContent);
+        const peakBookingTimesLabels = Object.keys(peakBookingTimesData);
+        const peakBookingTimesValues = Object.values(peakBookingTimesData);
+        const peakBookingTimesChart = new Chart(peakBookingTimesCtx, {
+            type: 'line',
+            data: {
+                labels: peakBookingTimesLabels.map(hour => `${hour}:00`),
+                datasets: [{
+                    label: 'Peak Booking Times',
+                    data: peakBookingTimesValues,
+                    backgroundColor: '#ff6384',
+                    borderColor: '#ff6384',
+                    fill: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    datalabels: {
+                        color: 'black',
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: function(value, context) {
+                            return value;
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

@@ -22,7 +22,7 @@ urlpatterns = [
     path('adminpanel/users/', views.admin_users, name='admin_users'),
     path('adminpanel/roles/', views.admin_roles, name='admin_roles'),
     path('adminpanel/settings/', views.admin_settings, name='admin_settings'),
-    path('adminpanel/backup/', views.admin_backup, name='admin_backup'),
+    path('adminpanel/', views.admin_dashboard, name='base_admin'),
     path('adminpanel/', RedirectView.as_view(url='/adminpanel/dashboard/', permanent=False), name='adminpanel_redirect'),
     path('adminpanel/toggle_user_active_status/<str:user_id>/', views.toggle_user_active_status, name='toggle_user_active_status'),
     path('adminpanel/courts/', views.admin_courts, name='admin_courts'),
@@ -40,6 +40,9 @@ urlpatterns = [
     path('adminpanel/update_booking_status/<uuid:booking_id>/', views.update_booking_status, name='update_booking_status'),
     path('adminpanel/courts/toggle_booking_status/<int:court_id>/', views.toggle_court_booking_status, name='toggle_court_booking_status'),
     path('adminpanel/venues/toggle_booking_status/<int:venue_id>/', views.toggle_venue_booking_status, name='toggle_venue_booking_status'),
+    path('adminpanel/backup/', views.admin_backup, name='admin_backup'),
+    path('adminpanel/backup/notification/', views.backup_notification, name='backup_notification'),
+    
 
     path('adminpanel/users/create/', views.create_user, name='create_user'),
     path('adminpanel/users/update/<uuid:user_id>/', views.update_user, name='update_user'),

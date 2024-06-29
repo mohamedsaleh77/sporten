@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect ,get_object_or_404
 from django.http import JsonResponse
 from .models import *
-from datetime import datetime
+from datetime import datetime, timedelta
 import json 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -12,6 +12,13 @@ from django.views.decorators.http import require_POST
 from django.db.models import Prefetch
 from .models import Court, Venue
 from .forms import CourtForm, VenueForm, BookingForm, BookingCourtForm, CustomUserUpdateForm
+import os
+from django.http import HttpResponse, HttpResponseRedirect
+from django.conf import settings
+import subprocess
+import shutil
+from django.urls import reverse
+from django.db.models import Count, Sum
 
 # Mostly Static Pages
 def load_home(request):
@@ -85,7 +92,64 @@ def dateSelected(request, date):
     
     return JsonResponse({'bookings': booking_data})
 
+
+from dateutil.parser import parse as parse_date
+
 def createBooking(request):
+    print("Received")
+    if request.method == 'POST':
+        try:
+            events_data = json.loads(request.POST.get('events', '[]'))
+            # Process the events_data as needed
+            print(events_data)  # For debugging purposes
+            
+            user = request.user
+            
+            # Create a new Booking instance
+            booking = Booking.objects.create(
+                userID=user,
+                price=0.0,
+                status='PENDING'
+            )
+
+            booking_courts = []
+            total_fee = 0
+
+            for event in events_data:
+                resourceID = event['resourceId']
+                court = Court.objects.get(id=resourceID[0])
+                start_time = parse_date(event['start'])
+                end_time = parse_date(event['end']) if event['end'] else None
+
+                # Calculate duration and fee for the court
+                duration_hours = (end_time - start_time).total_seconds() / 3600
+                court_fee = duration_hours * float(court.rate)
+                total_fee += court_fee
+
+                # Create BookingCourt instance
+                booking_court = BookingCourt(
+                    booking=booking,
+                    court=court,
+                    startTime=start_time,
+                    endTime=end_time
+                )
+                booking_courts.append(booking_court)
+
+            # Bulk create all BookingCourt instances
+            BookingCourt.objects.bulk_create(booking_courts)
+
+            # Update the Booking with total price
+            booking.price = total_fee
+            booking.save()
+
+            return JsonResponse({'status': 'success'})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+
+def createBooking_sameh(request):
     print("Received")
     if request.method == 'POST':
         try:
@@ -400,3 +464,89 @@ def delete_venue(request, venue_id):
     venue = get_object_or_404(Venue, id=venue_id)
     venue.delete()
     return redirect('admin_venues')
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_backup(request):
+    db_path = settings.DATABASES['default']['NAME']
+    backup_dir = os.path.join(settings.BASE_DIR, 'backups')
+    backup_file = os.path.join(backup_dir, f'{os.path.basename(db_path)}_backup.sqlite3')
+
+    os.makedirs(backup_dir, exist_ok=True)
+
+    try:
+        shutil.copy(db_path, backup_file)
+        with open(backup_file, 'rb') as f:
+            response = HttpResponse(f.read(), content_type='application/x-sqlite3')
+            response['Content-Disposition'] = f'attachment; filename={os.path.basename(backup_file)}'
+            # Redirect to the base_admin with a success parameter
+            response['Refresh'] = f'0; url={reverse("base_admin")}?backup_success=1'
+            return response
+    except Exception as e:
+        # Redirect to the base_admin with a failure parameter
+        return HttpResponseRedirect(f'{reverse("base_admin")}?backup_success=0')
+
+@login_required
+@user_passes_test(is_admin)
+def backup_notification(request):
+    previous_url = request.META.get('HTTP_REFERER', '/')
+    return render(request, 'adminpanel/backup_notification.html', {'previous_url': previous_url})
+    
+
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_dashboard(request):
+    # User statistics
+    total_users = User.objects.count()
+    new_users_last_week = User.objects.filter(date_joined__gte=datetime.now()-timedelta(days=7)).count()
+    active_users = User.objects.filter(is_active=True).count()
+
+    # Booking statistics
+    total_bookings = Booking.objects.count()
+    new_bookings_last_week = Booking.objects.filter(bookTime__gte=datetime.now()-timedelta(days=7)).count()
+    booking_status_distribution = list(Booking.objects.values('status').annotate(count=Count('status')))
+
+    # Court usage
+    most_booked_courts = list(Court.objects.annotate(bookings_count=Count('bookingcourt')).order_by('-bookings_count')[:5].values('courtName', 'bookings_count'))
+    booking_courts = BookingCourt.objects.select_related('court').all()
+    booking_hours_per_court = {}
+    for booking_court in booking_courts:
+        court_name = booking_court.court.courtName
+        duration = (booking_court.endTime - booking_court.startTime).total_seconds() / 3600
+        if court_name in booking_hours_per_court:
+            booking_hours_per_court[court_name] += duration
+        else:
+            booking_hours_per_court[court_name] = duration
+
+    peak_booking_times = {}
+    for booking_court in booking_courts:
+        hour = booking_court.startTime.hour
+        if hour in peak_booking_times:
+            peak_booking_times[hour] += 1
+        else:
+            peak_booking_times[hour] = 1
+
+    # Financial metrics
+    total_revenue = Booking.objects.aggregate(total_revenue=Sum('price'))['total_revenue']
+    revenue_last_week = Booking.objects.filter(bookTime__gte=datetime.now()-timedelta(days=7)).aggregate(revenue=Sum('price'))['revenue']
+    average_booking_price = Booking.objects.aggregate(average_price=Sum('price')/Count('bookingID'))['average_price']
+
+    context = {
+        'total_users': total_users,
+        'new_users_last_week': new_users_last_week,
+        'active_users': active_users,
+        'total_bookings': total_bookings,
+        'new_bookings_last_week': new_bookings_last_week,
+        'booking_status_distribution': json.dumps(booking_status_distribution),
+        'most_booked_courts': json.dumps(most_booked_courts),
+        'booking_hours_per_court': json.dumps(booking_hours_per_court),
+        'peak_booking_times': json.dumps(peak_booking_times),
+        'total_revenue': total_revenue,
+        'revenue_last_week': revenue_last_week,
+        'average_booking_price': average_booking_price,
+    }
+
+    return render(request, 'adminpanel/dashboard.html', context)

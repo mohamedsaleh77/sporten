@@ -1,0 +1,23 @@
+{% extends "adminpanel/base_admin.html" %}
+
+{% block title %}
+    <title>Backup</title>
+{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            title: 'Backup',
+            text: 'Your backup is being prepared. Please wait...',
+            icon: 'info',
+            showConfirmButton: false,
+            timer: 2000,
+            onClose: () => {
+                window.location.href = "{% url 'admin_backup' %}?next={{ previous_url|urlencode }}";
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,8 +1,8 @@
 {% extends "adminpanel/base_admin.html" %}
-{% load custom_filters %}
+{% load form_tags %}
 
 {% block title %}
-    <title>{% if form.instance.pk %}Edit User{% else %}Add User{% endif %}</title>
+    <title>{% if form.instance.pk %}Edit Booking{% else %}Add Booking{% endif %}</title>
 {% endblock %}
 
 {% block content %}
@@ -10,39 +10,39 @@
         <div class="row justify-content-center">
             <div class="col-md-6">
                 <div class="card">
-                    <div class="card-header text-center">
-                        <h2>{% if form.instance.pk %}Edit User{% else %}Add User{% endif %}</h2>
+                    <div class="card-header">
+                        <h2>{% if form.instance.pk %}Edit Booking{% else %}Add Booking{% endif %}</h2>
                     </div>
                     <div class="card-body">
                         <form method="post">
                             {% csrf_token %}
                             <div class="form-group">
-                                <label for="id_name">Name</label>
-                                {{ form.name|add_class:"form-control" }}
+                                <label for="id_userID">User</label>
+                                {{ form.userID|add_class:"form-control" }}
                             </div>
                             <div class="form-group">
-                                <label for="id_email">Email</label>
-                                {{ form.email|add_class:"form-control" }}
+                                <label for="id_price">Price</label>
+                                {{ form.price|add_class:"form-control" }}
                             </div>
                             <div class="form-group">
-                                <label for="id_phone_num">Phone Number</label>
-                                {{ form.phone_num|add_class:"form-control" }}
+                                <label for="id_status">Status</label>
+                                {{ form.status|add_class:"form-control" }}
                             </div>
                             <div class="form-group">
-                                <label for="id_accountType">Account Type</label>
-                                {{ form.accountType|add_class:"form-control" }}
+                                <label for="id_court">Court</label>
+                                {{ booking_court_form.court|add_class:"form-control" }}
                             </div>
                             <div class="form-group">
-                                <label for="id_password1">Password</label>
-                                {{ form.password1|add_class:"form-control" }}
+                                <label for="id_startTime">Start Time</label>
+                                {{ booking_court_form.startTime|add_class:"form-control" }}
                             </div>
                             <div class="form-group">
-                                <label for="id_password2">Confirm Password</label>
-                                {{ form.password2|add_class:"form-control" }}
+                                <label for="id_endTime">End Time</label>
+                                {{ booking_court_form.endTime|add_class:"form-control" }}
                             </div>
-                            <div class="form-group text-center">
-                                <button type="submit" class="btn btn-primary">Save</button>
-                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Save</button>
+                            <a href="{% url 'admin_bookings' %}" class="btn btn-secondary btn-block">Cancel</a>
+
                         </form>
                     </div>
                 </div>

@@ -63,9 +63,13 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'admin_settings' %}">Settings</a>
                 </li>
+                <!-- <li class="nav-item">
+                    <a class="nav-link" href="{% url 'backup_notification' %}">Backup</a>
+                </li> -->
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'admin_backup' %}">Backup</a>
                 </li>
+                
                 <!-- Add other necessary items here -->
             </ul>
         </div>
@@ -81,7 +85,22 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
- 
+    <script>
+        $(document).ready(function() {
+            // Check for backup success or failure
+            const urlParams = new URLSearchParams(window.location.search);
+            const backupSuccess = urlParams.get('backup_success');
+            if (backupSuccess) {
+                Swal.fire({
+                    title: backupSuccess === '1' ? 'Success' : 'Error',
+                    text: backupSuccess === '1' ? 'Backup completed successfully.' : 'Backup failed.',
+                    icon: backupSuccess === '1' ? 'success' : 'error',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            }
+        });
+    </script>
 
     {% endblock %}
 </body>
