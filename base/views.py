@@ -195,6 +195,15 @@ def update_court(request, court_id):
 
 @login_required
 @user_passes_test(is_admin)
+def delete_court(request, court_id):
+    court = get_object_or_404(Court, id=court_id)
+    court.delete()
+    return redirect('admin_courts')
+
+
+
+@login_required
+@user_passes_test(is_admin)
 def update_venue(request, venue_id):
     venue = get_object_or_404(Venue, id=venue_id)
     if request.method == 'POST':
@@ -206,12 +215,7 @@ def update_venue(request, venue_id):
         form = VenueForm(instance=venue)
     return render(request, 'adminpanel/venue_form.html', {'form': form})
 
-@login_required
-@user_passes_test(is_admin)
-def delete_court(request, court_id):
-    court = get_object_or_404(Court, id=court_id)
-    court.delete()
-    return redirect('admin_courts')
+
 
 @login_required
 @user_passes_test(is_admin)
