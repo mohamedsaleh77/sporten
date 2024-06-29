@@ -30,7 +30,9 @@
                 <td>{{ court.venueID.venueName }}</td>
                 <td>
                     <a href="{% url 'update_court' court.id %}" class="btn btn-primary btn-sm">Edit</a>
-                    <a href="{% url 'delete_court' court.id %}" class="btn btn-danger btn-sm">Delete</a>
+                    <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ court.id }}')">Delete</button>
+
+                    <!-- <a href="{% url 'delete_court' court.id %}" class="btn btn-danger btn-sm">Delete</a> -->
                 </td>
             </tr>
             {% endfor %}
@@ -39,9 +41,30 @@
 {% endblock %}
 
 {% block js %}
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script>
     $(document).ready(function() {
         $('#courtsTable').DataTable();
     });
+    function confirmDelete(courtId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = "{% url 'delete_court' 0 %}".replace('0', courtId);
+            }
+        });
+    }
 </script>
 {% endblock %}

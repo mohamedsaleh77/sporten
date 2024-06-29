@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import User
-from .models import User, Court, Venue
+from .models import User, Court, Venue ,Booking, BookingCourt 
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
@@ -28,3 +28,24 @@ class VenueForm(forms.ModelForm):
     class Meta:
         model = Venue
         fields = ['venueName', 'bookingToggle']
+
+class BookingForm(forms.ModelForm):
+    userID = forms.ModelChoiceField(queryset=User.objects.all(), widget=forms.Select(attrs={'class': 'form-control'}))
+    court = forms.ModelChoiceField(queryset=Court.objects.all(), widget=forms.Select(attrs={'class': 'form-control'}))
+    startTime = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}))
+    endTime = forms.DateTimeField(widget=forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}))
+    
+    class Meta:
+        model = Booking
+        fields = ['userID', 'price', 'status']
+
+    def save(self, commit=True):
+        booking = super().save(commit=False)
+        if commit:
+            booking.save()
+        return booking
+
+class BookingCourtForm(forms.ModelForm):
+    class Meta:
+        model = BookingCourt
+        fields = ['startTime', 'endTime', 'court', 'booking']

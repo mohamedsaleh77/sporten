@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_POST
 from django.db.models import Prefetch
 from .models import Court, Venue
-from .forms import CourtForm, VenueForm
+from .forms import CourtForm, VenueForm, BookingForm, BookingCourtForm
 
 # Mostly Static Pages
 def load_home(request):
@@ -93,23 +93,65 @@ def is_admin(user):
 def admin_dashboard(request):
     return render(request, 'adminpanel/dashboard.html')
 
+
 @login_required
 @user_passes_test(is_admin)
 def admin_bookings(request):
     bookings = BookingCourt.objects.select_related('booking__userID', 'court__venueID').all()
+    return render(request, 'adminpanel/bookings.html', {'bookings': bookings})
 
-    context = {
-        'bookings': bookings,
-    }
-    return render(request, 'adminpanel/bookings.html', context)
+@login_required
+@user_passes_test(is_admin)
+def create_booking(request):
+    if request.method == 'POST':
+        form = BookingForm(request.POST)
+        if form.is_valid():
+            booking = form.save()
+            booking_court_form = BookingCourtForm({
+                'startTime': form.cleaned_data['startTime'],
+                'endTime': form.cleaned_data['endTime'],
+                'court': form.cleaned_data['court'],
+                'booking': booking
+            })
+            if booking_court_form.is_valid():
+                booking_court_form.save()
+            return redirect('admin_bookings')
+    else:
+        form = BookingForm()
+    return render(request, 'adminpanel/booking_form.html', {'form': form})
 
+@login_required
+@user_passes_test(is_admin)
+def update_booking(request, booking_id):
+    booking = get_object_or_404(Booking, bookingID=booking_id)
+    if request.method == 'POST':
+        form = BookingForm(request.POST, instance=booking)
+        if form.is_valid():
+            booking = form.save()
+            booking_court = get_object_or_404(BookingCourt, booking=booking)
+            booking_court_form = BookingCourtForm(request.POST, instance=booking_court)
+            if booking_court_form.is_valid():
+                booking_court_form.save()
+            return redirect('admin_bookings')
+    else:
+        form = BookingForm(instance=booking)
+        booking_court = get_object_or_404(BookingCourt, booking=booking)
+        booking_court_form = BookingCourtForm(instance=booking_court)
+    return render(request, 'adminpanel/booking_form.html', {'form': form, 'booking_court_form': booking_court_form})
+
+@login_required
+@user_passes_test(is_admin)
+def delete_booking(request, booking_id):
+    booking = get_object_or_404(Booking, bookingID=booking_id)
+    booking.delete()
+    return redirect('admin_bookings')
 
 @login_required
 @user_passes_test(is_admin)
 @require_POST
 def update_booking_status(request, booking_id):
     try:
-        booking = BookingCourt.objects.get(pk=booking_id)
+        booking = Booking.objects.get(bookingID=booking_id)
         new_status = request.POST.get('status')
         if new_status in ['pending', 'confirmed', 'cancelled']:
             booking.status = new_status
@@ -117,10 +159,8 @@ def update_booking_status(request, booking_id):
             return JsonResponse({'success': True})
         else:
             return JsonResponse({'success': False, 'error': 'Invalid status'})
-    except BookingCourt.DoesNotExist:
+    except Booking.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Booking does not exist'})
-
-
 @login_required
 @user_passes_test(is_admin)
 def admin_users(request):
