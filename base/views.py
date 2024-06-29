@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect ,get_object_or_404
 from django.http import JsonResponse
 from .models import *
-from datetime import datetime
+from datetime import datetime, timedelta
 import json 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -18,6 +18,7 @@ from django.conf import settings
 import subprocess
 import shutil
 from django.urls import reverse
+from django.db.models import Count, Sum
 
 # Mostly Static Pages
 def load_home(request):
@@ -488,3 +489,60 @@ def backup_notification(request):
     previous_url = request.META.get('HTTP_REFERER', '/')
     return render(request, 'adminpanel/backup_notification.html', {'previous_url': previous_url})
     
+
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_dashboard(request):
+    # User statistics
+    total_users = User.objects.count()
+    new_users_last_week = User.objects.filter(date_joined__gte=datetime.now()-timedelta(days=7)).count()
+    active_users = User.objects.filter(is_active=True).count()
+
+    # Booking statistics
+    total_bookings = Booking.objects.count()
+    new_bookings_last_week = Booking.objects.filter(bookTime__gte=datetime.now()-timedelta(days=7)).count()
+    booking_status_distribution = list(Booking.objects.values('status').annotate(count=Count('status')))
+
+    # Court usage
+    most_booked_courts = list(Court.objects.annotate(bookings_count=Count('bookingcourt')).order_by('-bookings_count')[:5].values('courtName', 'bookings_count'))
+    booking_courts = BookingCourt.objects.select_related('court').all()
+    booking_hours_per_court = {}
+    for booking_court in booking_courts:
+        court_name = booking_court.court.courtName
+        duration = (booking_court.endTime - booking_court.startTime).total_seconds() / 3600
+        if court_name in booking_hours_per_court:
+            booking_hours_per_court[court_name] += duration
+        else:
+            booking_hours_per_court[court_name] = duration
+
+    peak_booking_times = {}
+    for booking_court in booking_courts:
+        hour = booking_court.startTime.hour
+        if hour in peak_booking_times:
+            peak_booking_times[hour] += 1
+        else:
+            peak_booking_times[hour] = 1
+
+    # Financial metrics
+    total_revenue = Booking.objects.aggregate(total_revenue=Sum('price'))['total_revenue']
+    revenue_last_week = Booking.objects.filter(bookTime__gte=datetime.now()-timedelta(days=7)).aggregate(revenue=Sum('price'))['revenue']
+    average_booking_price = Booking.objects.aggregate(average_price=Sum('price')/Count('bookingID'))['average_price']
+
+    context = {
+        'total_users': total_users,
+        'new_users_last_week': new_users_last_week,
+        'active_users': active_users,
+        'total_bookings': total_bookings,
+        'new_bookings_last_week': new_bookings_last_week,
+        'booking_status_distribution': json.dumps(booking_status_distribution),
+        'most_booked_courts': json.dumps(most_booked_courts),
+        'booking_hours_per_court': json.dumps(booking_hours_per_court),
+        'peak_booking_times': json.dumps(peak_booking_times),
+        'total_revenue': total_revenue,
+        'revenue_last_week': revenue_last_week,
+        'average_booking_price': average_booking_price,
+    }
+
+    return render(request, 'adminpanel/dashboard.html', context)

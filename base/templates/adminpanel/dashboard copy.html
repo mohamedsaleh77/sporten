@@ -1,0 +1,91 @@
+{% extends "adminpanel/base_admin.html" %}
+
+{% block title %}
+    <title>Admin Dashboard</title>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Admin Dashboard</h1>
+
+    <div class="row">
+        <!-- User Statistics -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    User Statistics
+                </div>
+                <div class="card-body">
+                    <p>Total Users: {{ total_users }}</p>
+                    <p>New Users (Last Week): {{ new_users_last_week }}</p>
+                    <p>Active Users: {{ active_users }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Statistics -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    Booking Statistics
+                </div>
+                <div class="card-body">
+                    <p>Total Bookings: {{ total_bookings }}</p>
+                    <p>New Bookings (Last Week): {{ new_bookings_last_week }}</p>
+                    <p>Booking Status Distribution:</p>
+                    <ul>
+                        {% for status in booking_status_distribution %}
+                            <li>{{ status.status }}: {{ status.count }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Metrics -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    Financial Metrics
+                </div>
+                <div class="card-body">
+                    <p>Total Revenue: {{ total_revenue }}</p>
+                    <p>Revenue (Last Week): {{ revenue_last_week }}</p>
+                    <p>Average Booking Price: {{ average_booking_price }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <!-- Court Usage -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Court Usage
+                </div>
+                <div class="card-body">
+                    <p>Most Booked Courts:</p>
+                    <ul>
+                        {% for court in most_booked_courts %}
+                            <li>{{ court.courtName }}: {{ court.bookings_count }} bookings</li>
+                        {% endfor %}
+                    </ul>
+                    <p>Booking Hours per Court:</p>
+                    <ul>
+                        {% for court, hours in booking_hours_per_court.items %}
+                            <li>{{ court }}: {{ hours }} hours</li>
+                        {% endfor %}
+                    </ul>
+                    <p>Peak Booking Times:</p>
+                    <ul>
+                        {% for hour, count in peak_booking_times.items %}
+                            <li>{{ hour }}:00 - {{ count }} bookings</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
