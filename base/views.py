@@ -12,12 +12,14 @@ from django.db.models import Prefetch
 from .models import Court, Venue
 from .forms import CourtForm, VenueForm
 
+# Mostly Static Pages
 def load_home(request):
     return render(request, 'home.html')
 
 def about(request):
     return render(request, 'about.html')
 
+# Login, Logout & Register
 def loginPage(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -66,12 +68,23 @@ def bookingPage(request, pk):
     context = {'courts': courts, "venue": venueGet, "holidays": holidays}
     return render(request, 'booking.html', context)
 
+# Booking Related
 def dateSelected(request, date):
     date_obj = datetime.strptime(date, "%Y-%m-%d").date()
     bookings = BookingCourt.objects.filter(startTime__date(date_obj))
     booking_data = list(bookings.values())
     return JsonResponse({'bookings': booking_data})
 
+def createBooking(request):
+    print('Received Request')
+    if request.method == 'POST':
+        # Get the JSON data from the request body
+        booking_data = request.POST.get('eventsArray[0]')
+        print(booking_data)
+    
+    return render(request, 'history.html')
+
+# Admin Related
 def is_admin(user):
     return user.is_staff
 

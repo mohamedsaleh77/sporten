@@ -13,16 +13,6 @@
 
 {% block headerjs %}
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.13/index.global.min.js'></script>
-    <script type="text/javascript">
-        var csrftoken = "{{ csrf_token }}";  // Get the CSRF token from Django
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
-                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                }
-            }
-        });
-    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             loadCalendar();
@@ -48,7 +38,7 @@
         // Load Timeline View 
         if (calendar.view.type === 'dayGridMonth') {
             loadTimeSlots(info);  // Pass selected date to loadTimeSlots
-            
+
         } 
     } 
 
@@ -128,6 +118,21 @@ function loadTimeSlots(info) {
     calendar.gotoDate(info);
 }
 
+function createBooking(){
+    const csrfToken = '{{ csrf_token }}';
+    const bookings = new FormData();
+    bookings.append('csrfmiddlewaretoken', csrfToken);
+    eventsArray = calendar.getEvents();
+    // Save events from calendar
+    for (let i = 0; i < eventsArray.length; i++) {
+        bookings.append(`eventsArray[${i}]`, eventsArray[i]);
+    }
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/create_booking/', true);
+    xhr.send(bookings);
+    console.log("sent");
+}
 
 </script> 
 {% endblock js %}

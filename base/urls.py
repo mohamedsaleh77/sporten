@@ -3,14 +3,22 @@ from django.views.generic.base import RedirectView
 from . import views
 
 urlpatterns = [
+    # Mostly Static Pages
     path('', views.load_home, name='load_home'),
     path('about/', views.about, name='about'),
+    
+    # Login & Logout
     path('login/', views.loginPage, name='loginPage'),
     path('logout/', views.logoutPage, name='logoutPage'),
+    
+    # Booking and Calendar Handling
     path('booking/<int:pk>/', views.bookingPage, name='booking'),
+    path('select_date/<str:date>/', views.dateSelected, name="dateSelected"),
+    path('create_booking/', views.createBooking, name='createBooking'),
+    
+    #Admin Panel and Functionality
     path('adminpanel/dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('adminpanel/bookings/', views.admin_bookings, name='admin_bookings'),
-    path('select_date/<str:date>/', views.dateSelected, name="dateSelected"),
     path('adminpanel/users/', views.admin_users, name='admin_users'),
     path('adminpanel/roles/', views.admin_roles, name='admin_roles'),
     path('adminpanel/settings/', views.admin_settings, name='admin_settings'),
