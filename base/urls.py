@@ -6,6 +6,7 @@ urlpatterns = [
     # Mostly Static Pages
     path('', views.load_home, name='load_home'),
     path('about/', views.about, name='about'),
+    path("history/", views.history, name="history"),
     
     # Login & Logout
     path('login/', views.loginPage, name='loginPage'),

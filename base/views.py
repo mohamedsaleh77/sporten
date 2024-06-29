@@ -20,6 +20,11 @@ def load_home(request):
 def about(request):
     return render(request, 'about.html')
 
+def history(request):
+    return render(request, 'history.html')
+
+#============================================================================
+
 # Login, Logout & Register
 def loginPage(request):
     if request.method == 'POST':
@@ -59,17 +64,19 @@ def logoutPage(request):
     logout(request)
     return redirect('load_home')
 
+#============================================================================
+
+# Booking Related
 @login_required
 def bookingPage(request, pk):
     venueGet = Venue.objects.get(id=pk)
-    courtsGet = Court.objects.filter(venueID=venueGet)
+    courtsGet = Court.objects.filter(venueID=venueGet, bookingToggle=True)
     courts = list(courtsGet.values())
     holidaysGet = Holiday.objects.filter(venueID=venueGet)
     holidays = list(holidaysGet.values())
     context = {'courts': courts, "venue": venueGet, "holidays": holidays}
     return render(request, 'booking.html', context)
 
-# Booking Related
 def dateSelected(request, date):
     date_obj = datetime.strptime(date, "%Y-%m-%d").date()
     bookings = BookingCourt.objects.filter(startTime__date=date_obj)
@@ -131,6 +138,7 @@ def createBooking(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
+#============================================================================
 
 # Admin Related
 def is_admin(user):
@@ -301,8 +309,6 @@ def delete_court(request, court_id):
     court.delete()
     return redirect('admin_courts')
 
-
-
 @login_required
 @user_passes_test(is_admin)
 def update_venue(request, venue_id):
@@ -315,8 +321,6 @@ def update_venue(request, venue_id):
     else:
         form = VenueForm(instance=venue)
     return render(request, 'adminpanel/venue_form.html', {'form': form})
-
-
 
 @login_required
 @user_passes_test(is_admin)
