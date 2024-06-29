@@ -24,7 +24,6 @@ urlpatterns = [
     path('adminpanel/backup/', views.admin_backup, name='admin_backup'),
     path('adminpanel/', RedirectView.as_view(url='/adminpanel/dashboard/', permanent=False), name='adminpanel_redirect'),
     path('adminpanel/toggle_user_active_status/<str:user_id>/', views.toggle_user_active_status, name='toggle_user_active_status'),
-    path('adminpanel/update_booking_status/<int:booking_id>/', views.update_booking_status, name='update_booking_status'),
     path('adminpanel/courts/', views.admin_courts, name='admin_courts'),
     path('adminpanel/venues/', views.admin_venues, name='admin_venues'),
     path('adminpanel/courts/create/', views.create_court, name='create_court'),
@@ -32,14 +31,21 @@ urlpatterns = [
     path('adminpanel/courts/update/<int:court_id>/', views.update_court, name='update_court'),
     path('adminpanel/venues/update/<int:venue_id>/', views.update_venue, name='update_venue'),
     path('adminpanel/courts/delete/<int:court_id>/', views.delete_court, name='delete_court'),
-    path('adminpanel/venues/delete/<int:venue_id>/', views.delete_venue, name='delete_venue'),
-   
-    
+    path('adminpanel/venues/delete/<int:venue_id>/', views.delete_venue, name='delete_venue'), 
     path('adminpanel/bookings/', views.admin_bookings, name='admin_bookings'),
     path('adminpanel/bookings/create/', views.create_booking, name='create_booking'),
     path('adminpanel/bookings/update/<uuid:booking_id>/', views.update_booking, name='update_booking'),
     path('adminpanel/bookings/delete/<uuid:booking_id>/', views.delete_booking, name='delete_booking'),
     path('adminpanel/update_booking_status/<uuid:booking_id>/', views.update_booking_status, name='update_booking_status'),
+    path('adminpanel/courts/toggle_booking_status/<int:court_id>/', views.toggle_court_booking_status, name='toggle_court_booking_status'),
+    path('adminpanel/venues/toggle_booking_status/<int:venue_id>/', views.toggle_venue_booking_status, name='toggle_venue_booking_status'),
+
+    path('adminpanel/users/create/', views.create_user, name='create_user'),
+    path('adminpanel/users/update/<uuid:user_id>/', views.update_user, name='update_user'),
+    path('adminpanel/users/delete/<uuid:user_id>/', views.delete_user, name='delete_user'),
+    path('adminpanel/users/update_account_type/<uuid:user_id>/', views.update_user_account_type, name='update_user_account_type'),
+
+
 
 
 
