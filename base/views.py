@@ -12,6 +12,12 @@ from django.views.decorators.http import require_POST
 from django.db.models import Prefetch
 from .models import Court, Venue
 from .forms import CourtForm, VenueForm, BookingForm, BookingCourtForm, CustomUserUpdateForm
+import os
+from django.http import HttpResponse, HttpResponseRedirect
+from django.conf import settings
+import subprocess
+import shutil
+from django.urls import reverse
 
 # Mostly Static Pages
 def load_home(request):
@@ -78,7 +84,64 @@ def dateSelected(request, date):
     
     return JsonResponse({'bookings': booking_data})
 
+
+from dateutil.parser import parse as parse_date
+
 def createBooking(request):
+    print("Received")
+    if request.method == 'POST':
+        try:
+            events_data = json.loads(request.POST.get('events', '[]'))
+            # Process the events_data as needed
+            print(events_data)  # For debugging purposes
+            
+            user = request.user
+            
+            # Create a new Booking instance
+            booking = Booking.objects.create(
+                userID=user,
+                price=0.0,
+                status='PENDING'
+            )
+
+            booking_courts = []
+            total_fee = 0
+
+            for event in events_data:
+                resourceID = event['resourceId']
+                court = Court.objects.get(id=resourceID[0])
+                start_time = parse_date(event['start'])
+                end_time = parse_date(event['end']) if event['end'] else None
+
+                # Calculate duration and fee for the court
+                duration_hours = (end_time - start_time).total_seconds() / 3600
+                court_fee = duration_hours * float(court.rate)
+                total_fee += court_fee
+
+                # Create BookingCourt instance
+                booking_court = BookingCourt(
+                    booking=booking,
+                    court=court,
+                    startTime=start_time,
+                    endTime=end_time
+                )
+                booking_courts.append(booking_court)
+
+            # Bulk create all BookingCourt instances
+            BookingCourt.objects.bulk_create(booking_courts)
+
+            # Update the Booking with total price
+            booking.price = total_fee
+            booking.save()
+
+            return JsonResponse({'status': 'success'})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+
+def createBooking_sameh(request):
     print("Received")
     if request.method == 'POST':
         try:
@@ -396,3 +459,32 @@ def delete_venue(request, venue_id):
     venue = get_object_or_404(Venue, id=venue_id)
     venue.delete()
     return redirect('admin_venues')
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_backup(request):
+    db_path = settings.DATABASES['default']['NAME']
+    backup_dir = os.path.join(settings.BASE_DIR, 'backups')
+    backup_file = os.path.join(backup_dir, f'{os.path.basename(db_path)}_backup.sqlite3')
+
+    os.makedirs(backup_dir, exist_ok=True)
+
+    try:
+        shutil.copy(db_path, backup_file)
+        with open(backup_file, 'rb') as f:
+            response = HttpResponse(f.read(), content_type='application/x-sqlite3')
+            response['Content-Disposition'] = f'attachment; filename={os.path.basename(backup_file)}'
+            # Redirect to the base_admin with a success parameter
+            response['Refresh'] = f'0; url={reverse("base_admin")}?backup_success=1'
+            return response
+    except Exception as e:
+        # Redirect to the base_admin with a failure parameter
+        return HttpResponseRedirect(f'{reverse("base_admin")}?backup_success=0')
+
+@login_required
+@user_passes_test(is_admin)
+def backup_notification(request):
+    previous_url = request.META.get('HTTP_REFERER', '/')
+    return render(request, 'adminpanel/backup_notification.html', {'previous_url': previous_url})
+    

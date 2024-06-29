@@ -125,6 +125,30 @@
         const csrfToken = '{{ csrf_token }}';
         const bookings = new FormData();
         bookings.append('csrfmiddlewaretoken', csrfToken);
+        const eventsArray = calendar.getEvents();
+
+        // Save events from calendar
+        const serializedEvents = eventsArray.map(event => ({
+            title: event.title,
+            start: event.start.toISOString(), // Convert to ISO string format
+            end: event.end ? event.end.toISOString() : null, // Convert to ISO string format if end exists
+            resourceId: event.getResources().map(resource => resource.id), // Convert to array of resource IDs
+            color: event.backgroundColor, // Assuming color is stored in backgroundColor
+            allDay: event.allDay
+        }));
+
+        bookings.append('events', JSON.stringify(serializedEvents));
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/create_booking/', true);
+        xhr.send(bookings);
+        console.log("sent");
+    }   
+
+
+    function createBooking_sameh(){
+        const csrfToken = '{{ csrf_token }}';
+        const bookings = new FormData();
+        bookings.append('csrfmiddlewaretoken', csrfToken);
         eventsArray = calendar.getEvents();
         // Save events from calendar
         const serializedEvents = eventsArray.map(event => ({
