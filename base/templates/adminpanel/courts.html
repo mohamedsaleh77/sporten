@@ -1,0 +1,47 @@
+{% extends "adminpanel/base_admin.html" %}
+
+{% block title %}
+    <title>Courts</title>
+{% endblock %}
+
+{% block content %}
+    <h1>Courts</h1>
+    <a href="{% url 'create_court' %}" class="btn btn-primary mb-3">Add New Court</a>
+    <table id="courtsTable" class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Court Name</th>
+                <th>Opening</th>
+                <th>Closing</th>
+                <th>Rate</th>
+                <th>Booking Toggle</th>
+                <th>Venue</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for court in courts %}
+            <tr>
+                <td>{{ court.courtName }}</td>
+                <td>{{ court.opening }}</td>
+                <td>{{ court.closing }}</td>
+                <td>{{ court.rate }}</td>
+                <td>{{ court.bookingToggle }}</td>
+                <td>{{ court.venueID.venueName }}</td>
+                <td>
+                    <a href="{% url 'update_court' court.id %}" class="btn btn-primary btn-sm">Edit</a>
+                    <a href="{% url 'delete_court' court.id %}" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block js %}
+<script>
+    $(document).ready(function() {
+        $('#courtsTable').DataTable();
+    });
+</script>
+{% endblock %}

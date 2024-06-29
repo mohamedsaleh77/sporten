@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block css %}
+{% endblock css %}
+
+{% block content%}
+<div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+    <div class="flex justify-center">  
+        <figure class="max-w-[45rem]">
+            <img class="w-full object-cover rounded-xl" src="{% static 'images/UNITEN.jpg' %}" alt="Uniten Entrance">
+        </figure>
+    </div>
+    
+    <div class="max-w-2xl mx-auto text-center mb-10 lg:mb-14">
+        <h2 class="text-5xl font-bold md:text-6xl md:leading-tight text-gray-800">
+            ABOUT US
+        </h2>
+    </div>
+  
+    <div class="max-w-5xl mx-auto">
+      <!-- Grid -->
+      <div class="grid sm:grid-cols-2 gap-6 md:gap-12">
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800">
+                Mission & Vision
+            </h3>
+            <p class="mt-2 text-gray-600">
+                Mission: Our mission is to empower the UNITEN community to easily access and utilize the university's sports facilities, promoting an active lifestyle for all students and staff.
+            </p>
+            <p class="mt-2 text-gray-600">
+                Vision: We envision a campus where booking sports facilities is effortless, transparent, and efficient, leading to increased participation in sports and recreational activities.
+            </p>
+        </div>
+        <!-- End Col -->
+  
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800">
+                Project Overview
+            </h3>
+            <p class="mt-2 text-gray-600">
+                SPORTEN is a web-based booking system designed to achieve this mission and vision. It provides a centralized platform for students and staff to:
+            </p>
+            <p class="mt-2 text-gray-600">
+                Browse: Explore our catalog of available sports facilities.
+            </p>
+            <p class="mt-2 text-gray-600">
+                Book: Effortlessly reserve facilities for specific dates and times, with real-time availability updates and instant confirmation.
+            </p>
+            <p class="mt-2 text-gray-600">
+                Manage: View, modify, or cancel upcoming bookings through a personalized dashboard, simplifying schedule management.
+            </p>
+        </div>
+        <!-- End Col -->
+  
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800">
+            Our Information
+            </h3>
+            <p class="mt-2 text-gray-600">
+                The person spearheading this project is Ahmed Sameh Ismaiel Hassanein 
+            </p>
+            <p class="mt-2 text-gray-600">
+                The supervisor is Dr. Badariah Solemon
+            </p>
+            <p class="mt-2 text-gray-600">
+            </p>
+        </div>
+        <!-- End Col -->
+      </div>
+      <!-- End Grid -->
+    </div>
+  </div>
+  <!-- End FAQ -->
+{% endblock content %}
+
+{% block js %}
+{% endblock js %}

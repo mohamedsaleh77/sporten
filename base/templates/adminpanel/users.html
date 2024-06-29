@@ -1,0 +1,80 @@
+{% extends "adminpanel/base_admin.html" %}
+
+{% block title %}
+    <title>Users</title>
+{% endblock %}
+
+{% block content %}
+    <h1>Users</h1>
+    <table id="usersTable" class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone Number</th>
+                <th>Account Number</th>
+                <th>Account Type</th>
+                <th>Status</th>
+
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.name }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.phone_num }}</td>
+                <td>{{ user.userID }}</td>
+                <td>{{ user.accountType }}</td>
+                <td>   <input type="checkbox" data-toggle="toggle" data-on="Active" data-off="Inactive" data-onstyle="success" data-offstyle="danger" onchange="toggleActiveStatus('{{ user.userID }}')" {% if user.is_active %}checked{% endif %}>
+                </td>
+                <td>
+                    <button class="btn btn-primary btn-sm" onclick="editUser({{ user.userID }})">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteUser({{ user.userID }})">Delete</button>
+                  
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block js %}
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#usersTable').DataTable();
+            $('input[data-toggle="toggle"]').bootstrapToggle();
+        });
+
+        function toggleActiveStatus(userId) {
+            $.ajax({
+                url: "{% url 'toggle_user_active_status' user_id=0 %}".replace('0', userId),
+                type: "POST",
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (!response.success) {
+                        alert('Error: ' + response.error);
+                    }
+                }
+            });
+        }
+
+        function editUser(userId) {
+            // Redirect to user edit page or open edit modal
+           
+        }
+
+        function deleteUser(userId) {
+            // Implement user deletion logic here
+        }
+    </script>
+{% endblock %}

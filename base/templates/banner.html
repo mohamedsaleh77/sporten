@@ -1,0 +1,55 @@
+{% load static %}
+
+<div id="app" class="relative w-full overflow-hidden">
+  <div class="flex transition-transform duration-700" :style="{ transform: `translateX(-${currentSlide * 100}%)` }">
+    <!-- Slide 1 -->
+    <div class="min-w-full h-96 flex items-center justify-center text-white">
+      <img src="{% static 'images/banner_test.png' %}" alt="Banner 1" class="absolute inset-0 w-full h-full object-fill">
+    </div>
+    <!-- Slide 2 -->
+    <div class="min-w-full h-64 bg-red-500 flex items-center justify-center text-white">
+      Slide 2
+    </div>
+    <!-- Slide 3 -->
+    <div class="min-w-full h-64 bg-green-500 flex items-center justify-center text-white">
+      Slide 3
+    </div>
+  </div>
+
+  <!-- Navigation Buttons -->
+  <button @click="prevSlide" class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full">
+    &larr;
+  </button>
+  <button @click="nextSlide" class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full">
+    &rarr;
+  </button>
+</div>
+
+<script>
+  const { createApp } = Vue;
+
+  createApp({
+    data() {
+      return {
+        currentSlide: 0,
+        totalSlides: 3,
+      };
+    },
+    mounted() {
+      //this.startAutoSlide();
+    },
+    methods: {
+      startAutoSlide() {
+        setInterval(() => {
+          this.nextSlide();
+        }, 3000);
+      },
+      nextSlide() {
+        this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
+      },
+      prevSlide() {
+        this.currentSlide = (this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
+      }
+    }
+  }).mount('#app');
+</script>

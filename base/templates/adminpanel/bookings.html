@@ -1,0 +1,85 @@
+{% extends "adminpanel/base_admin.html" %}
+
+{% block title %}
+    <title>Bookings</title>
+{% endblock %}
+
+{% block content %}
+    <h1>Bookings</h1>
+    <table id="bookingsTable" class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Booking ID</th>
+                <th>User Name</th>
+                <th>Venue Name</th>
+                <th>Court Name</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking_court in bookings %}
+            <tr>
+                <td>{{ booking_court.booking.bookingID }}</td>
+                <td>{{ booking_court.booking.userID.name }}</td>
+                <td>{{ booking_court.court.venueID.venueName }}</td>
+                <td>{{ booking_court.court.courtName }}</td>
+                <td>{{ booking_court.startTime }}</td>
+                <td>{{ booking_court.endTime }}</td>
+                <td>
+                    <select onchange="updateBookingStatus('{{ booking_court.booking.id }}', this.value)" class="form-control">
+                        <option value="pending" {% if booking_court.booking.status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="confirmed" {% if booking_court.booking.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                        <option value="cancelled" {% if booking_court.booking.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </td>
+                <td>
+                    <button class="btn btn-primary btn-sm" onclick="editBooking({{ booking_court.booking.id }})">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteBooking({{ booking_court.booking.id }})">Delete</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block js %}
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#bookingsTable').DataTable();
+    });
+
+    function updateBookingStatus(bookingId, status) {
+        $.ajax({
+            url: "{% url 'update_booking_status' booking_id=0 %}".replace('0', bookingId),
+            type: "POST",
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            data: {
+                'status': status
+            },
+            success: function(response) {
+                if (!response.success) {
+                    alert('Error: ' + response.error);
+                }
+            }
+        });
+    }
+
+    function editBooking(bookingId) {
+        // Redirect to booking edit page or open edit modal
+    }
+
+    function deleteBooking(bookingId) {
+        // Implement booking deletion logic here
+    }
+</script>
+{% endblock %}

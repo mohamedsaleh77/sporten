@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+    <style>
+        #calendar {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+    </style>
+{% endblock css %}
+
+{% block headerjs %}
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.13/index.global.min.js'></script>
+    <script type="text/javascript">
+        var csrftoken = "{{ csrf_token }}";  // Get the CSRF token from Django
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCalendar();
+        });
+
+    </script>
+
+{% endblock headerjs %}
+
+{% block content %}
+    {{ courts|json_script:"courts"|safe }}
+    {{ holidays|json_script:"holidays"|safe }}
+    <div id='calendar' ></div>
+
+{% endblock content %}
+
+{% block js %}
+<script>
+    let calendar;
+    let calendarEl;
+
+    function handleDateSelected(info) {
+        // Load Timeline View 
+        if (calendar.view.type === 'dayGridMonth') {
+            loadTimeSlots(info);  // Pass selected date to loadTimeSlots
+        } 
+    } 
+
+    function handleEventCreation(startTime, endTime, courtId) {
+    // 1. Create temporary event
+    var tempEvent = {
+        title: 'New Booking', // You can set a default title or prompt the user for it
+        start: startTime,
+        end: endTime,
+        resourceId: courtId,
+        color: '#378006', // Event color
+        allDay: false
+    };
+
+    // 2. Add event to the calendar
+    calendar.addEvent(tempEvent);
+
+    // 3. Log the event for debugging
+    console.log('Event added:', tempEvent);
+
+    // 4. Update the calendar view
+    calendar.render();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadCalendar();
+});
+
+function loadCalendar() {
+    const holidayData = JSON.parse(document.getElementById('holidays').textContent); 
+    var holidayDates = Object.values(holidayData).map(holiday => holiday.holidayDate);
+
+    calendarEl = document.getElementById('calendar');
+    calendar = new FullCalendar.Calendar(calendarEl, {
+        schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
+        initialView: 'dayGridMonth',
+        selectable: true,
+        dateClick: function(info) {
+            var selectedDate = info.dateStr;
+            handleDateSelected(selectedDate);
+        },
+        selectAllow: function(info) {
+            var selectedDateStr = info.startStr;
+            return !holidayDates.includes(selectedDateStr);
+        },
+        height: 600,
+    });
+
+    calendar.render();
+}
+
+function loadTimeSlots(info) {
+    const courtsData = JSON.parse(document.getElementById('courts').textContent); 
+    const resources = courtsData.map(court => ({
+        id: court.id,
+        title: court.courtName
+    }));
+
+    calendar.changeView('resourceTimelineDay');
+    calendar.setOption('resources', resources);
+    calendar.setOption('scrollTime', courtsData[0].opening);
+    calendar.setOption('slotMinTime', courtsData[0].opening);
+    calendar.setOption('slotMaxTime', courtsData[0].closing);
+    calendar.setOption('selectable', true);
+
+    calendar.setOption('select', function(info) {
+        alert('selected ' + info.startStr + ' to ' + info.endStr);
+
+        var startTime = info.startStr;
+        var endTime = info.endStr;
+        var courtId = info.resource.id;
+
+        handleEventCreation(startTime, endTime, courtId);
+    });
+
+    calendar.setOption('selectMirror', true);
+    calendar.gotoDate(info);
+}
+
+
+</script> 
+{% endblock js %}
+

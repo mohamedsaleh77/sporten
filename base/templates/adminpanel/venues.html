@@ -1,0 +1,39 @@
+{% extends "adminpanel/base_admin.html" %}
+
+{% block title %}
+    <title>Venues</title>
+{% endblock %}
+
+{% block content %}
+    <h1>Venues</h1>
+    <a href="{% url 'create_venue' %}" class="btn btn-primary mb-3">Add New Venue</a>
+    <table id="venuesTable" class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Venue Name</th>
+                <th>Booking Toggle</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for venue in venues %}
+            <tr>
+                <td>{{ venue.venueName }}</td>
+                <td>{{ venue.bookingToggle }}</td>
+                <td>
+                    <a href="{% url 'update_venue' venue.id %}" class="btn btn-primary btn-sm">Edit</a>
+                    <a href="{% url 'delete_venue' venue.id %}" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block js %}
+<script>
+    $(document).ready(function() {
+        $('#venuesTable').DataTable();
+    });
+</script>
+{% endblock %}

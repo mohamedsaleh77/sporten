@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load form_tags %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h2>Register</h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+
+                        <div class="form-group">
+                            <label for="id_name">Name</label>
+                            {{ form.name|add_class:"form-control" }}
+                            {% for error in form.name.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_email">Email</label>
+                            {{ form.email|add_class:"form-control" }}
+                            {% for error in form.email.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_password1">Password</label>
+                            {{ form.password1|add_class:"form-control" }}
+                            {% for error in form.password1.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_password2">Confirm Password</label>
+                            {{ form.password2|add_class:"form-control" }}
+                            {% for error in form.password2.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="form-group text-center">
+                            <button type="submit" class="btn btn-primary btn-block">Register</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            var forms = document.getElementsByClassName('needs-validation');
+            Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css">
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+           
+        }
+        .wrapper {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+        .sidebar {
+            background-color: #343a40;
+            color: white;
+            width: 250px;
+            height: 100vh;
+            flex-shrink: 0;
+        }
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .nav-link {
+            color: white;
+        }
+        .nav-link:hover {
+            color: #adb5bd;
+        }
+    </style>
+    <title>{% block title %}Admin Panel{% endblock %}</title>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="sidebar p-3">
+            <h2>Admin Panel</h2>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_dashboard' %}">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_bookings' %}">Bookings</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_courts' %}">Courts</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_venues' %}">Venues</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_users' %}">Users</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_roles' %}">User Roles</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_settings' %}">Settings</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'admin_backup' %}">Backup</a>
+                </li>
+                <!-- Add other necessary items here -->
+            </ul>
+        </div>
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    {% block js %}
+    <!-- Scripts will be loaded here -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+    {% endblock %}
+</body>
+</html>

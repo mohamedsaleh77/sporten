@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <title>Login Page</title>
+{% endblock title %}
+
+{% block content %}
+    <div class="container mt-5">
+        {% if messages %}
+        <div class="alert alert-info">
+            <ul class="mb-0">
+                {% for message in messages %}
+                <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h2>Login</h2>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="email">Email:</label>
+                                <input type="email" name="email" class="form-control" placeholder="Enter E-mail" required />
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Password:</label>
+                                <input type="password" name="password" class="form-control" placeholder="Enter Password" required />
+                            </div>
+                            <div class="form-group text-center">
+                                <input type="submit" value="Login" class="btn btn-primary btn-block">
+                                <button type="button" id="register-button" onclick="window.location.href='{% url 'registerPage' %}'" class="btn btn-secondary btn-block mt-2">
+                                    Register
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

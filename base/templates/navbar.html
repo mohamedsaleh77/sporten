@@ -1,0 +1,58 @@
+{% load static %}
+
+<header class="flex flex-wrap md:justify-start md:flex-nowrap z-50 w-full py-1">
+    <nav class="relative max-w-7xl w-full flex flex-wrap md:grid md:grid-cols-12 basis-full items-center px-4 md:px-6 md:px-8 mx-auto" aria-label="Global">
+      <div class="md:col-span-3">
+        <!-- Logo -->
+        <a class="flex-none rounded-xl text-xl inline-block font-semibold focus:outline-none focus:opacity-80" href="{% url "load_home" %}" >
+          <img class="w-auto h-16" src="{% static 'images/SPORTEN Logo.png' %}"  alt="SPORTEN Logo">
+        </a>
+
+      </div>
+  
+      <!-- Button Group -->
+      <div class="flex items-center gap-x-2 ms-auto py-1 md:ps-6 md:order-3 md:col-span-3">
+
+        <div class="md:hidden">
+          <button type="button" class="hs-collapse-toggle size-[38px] flex justify-center items-center text-sm font-semibold rounded-xl border border-gray-200 text-black hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none" data-hs-collapse="#navbar-collapse-with-animation" aria-controls="navbar-collapse-with-animation" aria-label="Toggle navigation">
+            <svg class="hs-collapse-open:hidden flex-shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
+            <svg class="hs-collapse-open:block hidden flex-shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+
+        {% if request.path != "/login/" %}
+          {% if request.user.is_authenticated %}
+            <button type="button" id="logout-button" onclick="window.location.href='{% url 'logoutPage' %}'" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl border border-gray-200 text-black hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none">
+              Log out
+            </button>
+          {% else %}
+            <button type="button" id="login-button" onclick="window.location.href='{% url 'loginPage' %}'" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl border border-gray-200 text-black hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none">
+              Log in
+            </button>
+            <button type="button" id="register-button" onclick="window.location.href='{% url 'registerPage' %}'" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl border border-gray-200 text-black hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none">
+              Register
+            </button>
+            {% endif %}
+        {% endif %}
+
+      </div>
+  
+      <!-- Collapsable Buttons -->
+      <div id="navbar-collapse-with-animation" class="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow md:block md:w-auto md:basis-auto md:order-2 md:col-span-6">
+        <div class="flex flex-col gap-y-4 gap-x-0 mt-5 md:flex-row md:justify-center md:items-center md:gap-y-0 md:gap-x-7 md:mt-0">
+          <div>
+            <a class="inline-block text-black hover:text-gray-600" href="#">Sports</a>
+          </div>
+          <div>
+            <a class="inline-block text-black hover:text-gray-600" href="#">Venues</a>
+          </div>
+          <div>
+            <a class="inline-block text-black hover:text-gray-600" href="#">Events</a>
+          </div>
+          <div>
+            <a class="inline-block text-black hover:text-gray-600" href="{% url 'about'%}">About</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
