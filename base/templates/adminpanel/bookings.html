@@ -30,10 +30,10 @@
                 <td>{{ booking_court.startTime }}</td>
                 <td>{{ booking_court.endTime }}</td>
                 <td>
-                    <select onchange="confirmUpdateBookingStatus('{{ booking_court.booking.bookingID }}', this.value)" class="form-control">
-                        <option value="pending" {% if booking_court.booking.status == 'PENDING' %}selected{% endif %}>Pending</option>
-                        <option value="confirmed" {% if booking_court.booking.status == 'CONFIRMED' %}selected{% endif %}>Confirmed</option>
-                        <option value="cancelled" {% if booking_court.booking.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                    <select onchange="updateBookingStatus('{{ booking_court.booking.bookingID }}', this.value)" class="form-control">
+                        <option value="PENDING" {% if booking_court.booking.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                        <option value="CONFIRMED" {% if booking_court.booking.status == 'COMPLETED' %}selected{% endif %}>Completed</option>
+                        <option value="CANCELLED" {% if booking_court.booking.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
                     </select>
                 </td>
                 <td>
@@ -59,6 +59,7 @@
         $('#bookingsTable').DataTable();
     });
 
+
     function updateBookingStatus(bookingId, status) {
         $.ajax({
             url: "{% url 'update_booking_status' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', bookingId),
@@ -79,7 +80,7 @@
         });
     }
 
-    function confirmDeleteBooking(bookingId) {
+    function confirmDeleteBooking(bookingCourtId) {
         Swal.fire({
             title: 'Are you sure?',
             text: "You won't be able to revert this!",
@@ -90,7 +91,7 @@
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                window.location.href = "{% url 'delete_booking' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', bookingId);
+                window.location.href = "{% url 'delete_booking' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', bookingCourtId);
             }
         });
     }

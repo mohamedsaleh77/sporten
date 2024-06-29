@@ -22,7 +22,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="id_bookingToggle">Booking Toggle</label>
-                                {{ form.bookingToggle|add_class:"form-control" }}
+                                {{ form.bookingToggle|add_class:"form-control toggle-checkbox" }}
                             </div>
                             <div class="form-group text-center">
                                 <button type="submit" class="btn btn-primary">Save</button>
@@ -33,4 +33,19 @@
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block js %}
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.toggle-checkbox').bootstrapToggle({
+            on: 'Active',
+            off: 'Inactive',
+            onstyle: 'success',
+            offstyle: 'danger'
+        });
+    });
+</script>
 {% endblock %}

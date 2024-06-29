@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_POST
 from django.db.models import Prefetch
 from .models import Court, Venue
-from .forms import CourtForm, VenueForm, BookingForm, BookingCourtForm
+from .forms import CourtForm, VenueForm, BookingForm, BookingCourtForm, CustomUserUpdateForm
 
 # Mostly Static Pages
 def load_home(request):
@@ -160,40 +160,49 @@ def admin_bookings(request):
 @user_passes_test(is_admin)
 def create_booking(request):
     if request.method == 'POST':
-        form = BookingForm(request.POST)
-        if form.is_valid():
-            booking = form.save()
-            booking_court_form = BookingCourtForm({
-                'startTime': form.cleaned_data['startTime'],
-                'endTime': form.cleaned_data['endTime'],
-                'court': form.cleaned_data['court'],
-                'booking': booking
-            })
-            if booking_court_form.is_valid():
-                booking_court_form.save()
+        booking_form = BookingForm(request.POST)
+        booking_court_form = BookingCourtForm(request.POST)
+        if booking_form.is_valid() and booking_court_form.is_valid():
+            booking = booking_form.save()
+            booking_court = booking_court_form.save(commit=False)
+            booking_court.booking = booking
+            booking_court.save()
             return redirect('admin_bookings')
     else:
-        form = BookingForm()
-    return render(request, 'adminpanel/booking_form.html', {'form': form})
+        booking_form = BookingForm()
+        booking_court_form = BookingCourtForm()
+    return render(request, 'adminpanel/booking_form.html', {'form': booking_form, 'booking_court_form': booking_court_form})
 
 @login_required
 @user_passes_test(is_admin)
 def update_booking(request, booking_id):
     booking = get_object_or_404(Booking, bookingID=booking_id)
+    booking_court = BookingCourt.objects.filter(booking=booking).first()
     if request.method == 'POST':
-        form = BookingForm(request.POST, instance=booking)
-        if form.is_valid():
-            booking = form.save()
-            booking_court = get_object_or_404(BookingCourt, booking=booking)
-            booking_court_form = BookingCourtForm(request.POST, instance=booking_court)
-            if booking_court_form.is_valid():
-                booking_court_form.save()
+        booking_form = BookingForm(request.POST, instance=booking)
+        booking_court_form = BookingCourtForm(request.POST, instance=booking_court)
+        if booking_form.is_valid() and booking_court_form.is_valid():
+            booking_form.save()
+            booking_court_form.save()
             return redirect('admin_bookings')
     else:
-        form = BookingForm(instance=booking)
-        booking_court = get_object_or_404(BookingCourt, booking=booking)
+        booking_form = BookingForm(instance=booking)
         booking_court_form = BookingCourtForm(instance=booking_court)
-    return render(request, 'adminpanel/booking_form.html', {'form': form, 'booking_court_form': booking_court_form})
+    return render(request, 'adminpanel/booking_form.html', {'form': booking_form, 'booking_court_form': booking_court_form})
+
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_POST
+def toggle_court_booking_status(request, court_id):
+    try:
+        court = Court.objects.get(pk=court_id)
+        court.bookingToggle = not court.bookingToggle
+        court.save()
+        return JsonResponse({'success': True, 'bookingToggle': court.bookingToggle})
+    except Court.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Court does not exist'})
 
 @login_required
 @user_passes_test(is_admin)
@@ -207,9 +216,9 @@ def delete_booking(request, booking_id):
 @require_POST
 def update_booking_status(request, booking_id):
     try:
-        booking = Booking.objects.get(bookingID=booking_id)
+        booking = Booking.objects.get(pk=booking_id)
         new_status = request.POST.get('status')
-        if new_status in ['pending', 'confirmed', 'cancelled']:
+        if new_status in ['PENDING', 'CONFIRMED', 'CANCELLED']:
             booking.status = new_status
             booking.save()
             return JsonResponse({'success': True})
@@ -217,6 +226,7 @@ def update_booking_status(request, booking_id):
             return JsonResponse({'success': False, 'error': 'Invalid status'})
     except Booking.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Booking does not exist'})
+
 @login_required
 @user_passes_test(is_admin)
 def admin_users(request):
@@ -225,6 +235,54 @@ def admin_users(request):
         'users': users,
     }
     return render(request, 'adminpanel/users.html', context)
+
+@login_required
+@user_passes_test(is_admin)
+def create_user(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('admin_users')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'adminpanel/user_form.html', {'form': form})
+
+@login_required
+@user_passes_test(is_admin)
+def update_user(request, user_id):
+    user = get_object_or_404(User, userID=user_id)
+    if request.method == 'POST':
+        form = CustomUserUpdateForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('admin_users')
+    else:
+        form = CustomUserUpdateForm(instance=user)
+    return render(request, 'adminpanel/user_form.html', {'form': form})
+
+@login_required
+@user_passes_test(is_admin)
+def delete_user(request, user_id):
+    user = get_object_or_404(User, userID=user_id)
+    user.delete()
+    return redirect('admin_users')
+
+@login_required
+@user_passes_test(is_admin)
+@require_POST
+def update_user_account_type(request, user_id):
+    try:
+        user = User.objects.get(pk=user_id)
+        new_account_type = request.POST.get('accountType')
+        if new_account_type in dict(User.accountChoices).keys():
+            user.accountType = new_account_type
+            user.save()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid account type'})
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User does not exist'})
 
 @login_required
 @user_passes_test(is_admin)
@@ -264,6 +322,20 @@ def admin_courts(request):
 def admin_venues(request):
     venues = Venue.objects.all()
     return render(request, 'adminpanel/venues.html', {'venues': venues})
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_POST
+def toggle_venue_booking_status(request, venue_id):
+    try:
+        venue = Venue.objects.get(pk=venue_id)
+        venue.bookingToggle = not venue.bookingToggle
+        venue.save()
+        return JsonResponse({'success': True, 'bookingToggle': venue.bookingToggle})
+    except Venue.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Venue does not exist'})
+
 
 @login_required
 @user_passes_test(is_admin)

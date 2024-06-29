@@ -26,13 +26,13 @@
                 <td>{{ court.opening }}</td>
                 <td>{{ court.closing }}</td>
                 <td>{{ court.rate }}</td>
-                <td>{{ court.bookingToggle }}</td>
+                <td>
+                    <input type="checkbox" data-toggle="toggle" data-on="Active" data-off="Inactive" data-onstyle="success" data-offstyle="danger" onchange="toggleBookingStatus('{{ court.id }}')" {% if court.bookingToggle %}checked{% endif %}>
+                </td>
                 <td>{{ court.venueID.venueName }}</td>
                 <td>
                     <a href="{% url 'update_court' court.id %}" class="btn btn-primary btn-sm">Edit</a>
                     <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ court.id }}')">Delete</button>
-
-                    <!-- <a href="{% url 'delete_court' court.id %}" class="btn btn-danger btn-sm">Delete</a> -->
                 </td>
             </tr>
             {% endfor %}
@@ -47,10 +47,28 @@
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
 <script>
     $(document).ready(function() {
         $('#courtsTable').DataTable();
+        $('input[data-toggle="toggle"]').bootstrapToggle();
     });
+
+    function toggleBookingStatus(courtId) {
+        $.ajax({
+            url: "{% url 'toggle_court_booking_status' '000' %}".replace('000', courtId),
+            type: "POST",
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (!response.success) {
+                    Swal.fire('Error', response.error, 'error');
+                }
+            }
+        });
+    }
+
     function confirmDelete(courtId) {
         Swal.fire({
             title: 'Are you sure?',

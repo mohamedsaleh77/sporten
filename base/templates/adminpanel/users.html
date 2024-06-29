@@ -6,6 +6,7 @@
 
 {% block content %}
     <h1>Users</h1>
+    <a href="{% url 'create_user' %}" class="btn btn-primary mb-3">Add New User</a>
     <table id="usersTable" class="table table-striped table-bordered">
         <thead>
             <tr>
@@ -15,7 +16,6 @@
                 <th>Account Number</th>
                 <th>Account Type</th>
                 <th>Status</th>
-
                 <th>Actions</th>
             </tr>
         </thead>
@@ -26,13 +26,20 @@
                 <td>{{ user.email }}</td>
                 <td>{{ user.phone_num }}</td>
                 <td>{{ user.userID }}</td>
-                <td>{{ user.accountType }}</td>
-                <td>   <input type="checkbox" data-toggle="toggle" data-on="Active" data-off="Inactive" data-onstyle="success" data-offstyle="danger" onchange="toggleActiveStatus('{{ user.userID }}')" {% if user.is_active %}checked{% endif %}>
+                <td>
+                    <select onchange="updateUserAccountType('{{ user.userID }}', this.value)" class="form-control">
+                        <option value="EXT" {% if user.accountType == 'EXT' %}selected{% endif %}>External</option>
+                        <option value="STU" {% if user.accountType == 'STU' %}selected{% endif %}>Student</option>
+                        <option value="STA" {% if user.accountType == 'STA' %}selected{% endif %}>Staff</option>
+                        <option value="ADM" {% if user.accountType == 'ADM' %}selected{% endif %}>Admin</option>
+                    </select>
                 </td>
                 <td>
-                    <button class="btn btn-primary btn-sm" onclick="editUser({{ user.userID }})">Edit</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteUser({{ user.userID }})">Delete</button>
-                  
+                    <input type="checkbox" data-toggle="toggle" data-on="Active" data-off="Inactive" data-onstyle="success" data-offstyle="danger" onchange="toggleActiveStatus('{{ user.userID }}')" {% if user.is_active %}checked{% endif %}>
+                </td>
+                <td>
+                    <a href="{% url 'update_user' user.userID %}" class="btn btn-primary btn-sm">Edit</a>
+                    <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ user.userID }}')">Delete</button>
                 </td>
             </tr>
             {% endfor %}
@@ -46,36 +53,64 @@
 <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap4.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
 
-    <script>
-        $(document).ready(function() {
-            $('#usersTable').DataTable();
-            $('input[data-toggle="toggle"]').bootstrapToggle();
-        });
+<script>
+    $(document).ready(function() {
+        $('#usersTable').DataTable();
+        $('input[data-toggle="toggle"]').bootstrapToggle();
+    });
 
-        function toggleActiveStatus(userId) {
-            $.ajax({
-                url: "{% url 'toggle_user_active_status' user_id=0 %}".replace('0', userId),
-                type: "POST",
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                success: function(response) {
-                    if (!response.success) {
-                        alert('Error: ' + response.error);
-                    }
+    function updateUserAccountType(userId, accountType) {
+        $.ajax({
+            url: "{% url 'update_user_account_type' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', userId),
+            type: "POST",
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            data: {
+                'accountType': accountType
+            },
+            success: function(response) {
+                if (!response.success) {
+                    Swal.fire('Error', response.error, 'error');
+                } else {
+                    Swal.fire('Updated!', 'User account type has been updated.', 'success');
                 }
-            });
-        }
+            }
+        });
+    }
 
-        function editUser(userId) {
-            // Redirect to user edit page or open edit modal
-           
-        }
+    function toggleActiveStatus(userId) {
+        $.ajax({
+            url: "{% url 'toggle_user_active_status' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', userId),
+            type: "POST",
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (!response.success) {
+                    Swal.fire('Error', response.error, 'error');
+                }
+            }
+        });
+    }
 
-        function deleteUser(userId) {
-            // Implement user deletion logic here
-        }
-    </script>
+    function confirmDelete(userId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = "{% url 'delete_user' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', userId);
+            }
+        });
+    }
+</script>
 {% endblock %}
