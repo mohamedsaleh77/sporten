@@ -1,0 +1,52 @@
+{% extends "adminpanel/base_admin.html" %}
+{% load custom_filters %}
+
+{% block title %}
+    <title>{% if form.instance.pk %}Edit Booking{% else %}Add Booking{% endif %}</title>
+{% endblock %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h2>{% if form.instance.pk %}Edit Booking{% else %}Add Booking{% endif %}</h2>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="id_userID">User</label>
+                                {{ form.userID|add_class:"form-control" }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_court">Court</label>
+                                {{ form.court|add_class:"form-control" }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_startTime">Start Time</label>
+                                {{ form.startTime|add_class:"form-control" }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_endTime">End Time</label>
+                                {{ form.endTime|add_class:"form-control" }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_price">Price</label>
+                                {{ form.price|add_class:"form-control" }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_status">Status</label>
+                                {{ form.status|add_class:"form-control" }}
+                            </div>
+                            <div class="form-group text-center">
+                                <button type="submit" class="btn btn-primary">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

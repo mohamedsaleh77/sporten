@@ -6,6 +6,7 @@
 
 {% block content %}
     <h1>Bookings</h1>
+    <a href="{% url 'create_booking' %}" class="btn btn-primary mb-3">Add New Booking</a>
     <table id="bookingsTable" class="table table-striped table-bordered">
         <thead>
             <tr>
@@ -29,15 +30,15 @@
                 <td>{{ booking_court.startTime }}</td>
                 <td>{{ booking_court.endTime }}</td>
                 <td>
-                    <select onchange="updateBookingStatus('{{ booking_court.booking.id }}', this.value)" class="form-control">
-                        <option value="pending" {% if booking_court.booking.status == 'pending' %}selected{% endif %}>Pending</option>
-                        <option value="confirmed" {% if booking_court.booking.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
-                        <option value="cancelled" {% if booking_court.booking.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    <select onchange="confirmUpdateBookingStatus('{{ booking_court.booking.bookingID }}', this.value)" class="form-control">
+                        <option value="pending" {% if booking_court.booking.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                        <option value="confirmed" {% if booking_court.booking.status == 'CONFIRMED' %}selected{% endif %}>Confirmed</option>
+                        <option value="cancelled" {% if booking_court.booking.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
                     </select>
                 </td>
                 <td>
-                    <button class="btn btn-primary btn-sm" onclick="editBooking({{ booking_court.booking.id }})">Edit</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteBooking({{ booking_court.booking.id }})">Delete</button>
+                    <button class="btn btn-primary btn-sm" onclick="editBooking('{{ booking_court.booking.bookingID }}')">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="confirmDeleteBooking('{{ booking_court.booking.bookingID }}')">Delete</button>
                 </td>
             </tr>
             {% endfor %}
@@ -51,6 +52,8 @@
 <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap4.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
 <script>
     $(document).ready(function() {
         $('#bookingsTable').DataTable();
@@ -58,7 +61,7 @@
 
     function updateBookingStatus(bookingId, status) {
         $.ajax({
-            url: "{% url 'update_booking_status' booking_id=0 %}".replace('0', bookingId),
+            url: "{% url 'update_booking_status' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', bookingId),
             type: "POST",
             headers: {
                 'X-CSRFToken': '{{ csrf_token }}'
@@ -68,18 +71,32 @@
             },
             success: function(response) {
                 if (!response.success) {
-                    alert('Error: ' + response.error);
+                    Swal.fire('Error', response.error, 'error');
+                } else {
+                    Swal.fire('Updated!', 'Booking status has been updated.', 'success');
                 }
             }
         });
     }
 
-    function editBooking(bookingId) {
-        // Redirect to booking edit page or open edit modal
+    function confirmDeleteBooking(bookingId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = "{% url 'delete_booking' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', bookingId);
+            }
+        });
     }
 
-    function deleteBooking(bookingId) {
-        // Implement booking deletion logic here
+    function editBooking(bookingId) {
+        window.location.href = "{% url 'update_booking' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', bookingId);
     }
 </script>
 {% endblock %}

@@ -18,14 +18,12 @@ urlpatterns = [
     
     #Admin Panel and Functionality
     path('adminpanel/dashboard/', views.admin_dashboard, name='admin_dashboard'),
-    path('adminpanel/bookings/', views.admin_bookings, name='admin_bookings'),
     path('adminpanel/users/', views.admin_users, name='admin_users'),
     path('adminpanel/roles/', views.admin_roles, name='admin_roles'),
     path('adminpanel/settings/', views.admin_settings, name='admin_settings'),
     path('adminpanel/backup/', views.admin_backup, name='admin_backup'),
     path('adminpanel/', RedirectView.as_view(url='/adminpanel/dashboard/', permanent=False), name='adminpanel_redirect'),
     path('adminpanel/toggle_user_active_status/<str:user_id>/', views.toggle_user_active_status, name='toggle_user_active_status'),
-    path('adminpanel/bookings/', views.admin_bookings, name='admin_bookings'),
     path('adminpanel/update_booking_status/<int:booking_id>/', views.update_booking_status, name='update_booking_status'),
     path('adminpanel/courts/', views.admin_courts, name='admin_courts'),
     path('adminpanel/venues/', views.admin_venues, name='admin_venues'),
@@ -35,7 +33,15 @@ urlpatterns = [
     path('adminpanel/venues/update/<int:venue_id>/', views.update_venue, name='update_venue'),
     path('adminpanel/courts/delete/<int:court_id>/', views.delete_court, name='delete_court'),
     path('adminpanel/venues/delete/<int:venue_id>/', views.delete_venue, name='delete_venue'),
-    
-
    
+    
+    path('adminpanel/bookings/', views.admin_bookings, name='admin_bookings'),
+    path('adminpanel/bookings/create/', views.create_booking, name='create_booking'),
+    path('adminpanel/bookings/update/<uuid:booking_id>/', views.update_booking, name='update_booking'),
+    path('adminpanel/bookings/delete/<uuid:booking_id>/', views.delete_booking, name='delete_booking'),
+    path('adminpanel/update_booking_status/<uuid:booking_id>/', views.update_booking_status, name='update_booking_status'),
+
+
+
+
 ]
