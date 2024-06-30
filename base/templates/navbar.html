@@ -1,58 +1,91 @@
 {% load static %}
 
-<header class="flex flex-wrap md:justify-start md:flex-nowrap z-50 w-full py-1">
-    <nav class="relative max-w-7xl w-full flex flex-wrap md:grid md:grid-cols-12 basis-full items-center px-4 md:px-6 md:px-8 mx-auto" aria-label="Global">
-      <div class="md:col-span-3">
-        <!-- Logo -->
-        <a class="flex-none rounded-xl text-xl inline-block font-semibold focus:outline-none focus:opacity-80" href="{% url "load_home" %}" >
-          <img class="w-auto h-16" src="{% static 'images/SPORTEN Logo.png' %}"  alt="SPORTEN Logo">
-        </a>
+<header class="flex flex-wrap md:justify-between md:flex-nowrap z-50 w-full py-1 navbar">
+    <nav class="relative max-w-7xl w-full flex items-center px-4 md:px-6 md:px-8 mx-auto" aria-label="Global">
+        <div class="flex items-center">
+            <!-- Logo -->
+            <a class="flex-none rounded-xl text-xl inline-block font-semibold focus:outline-none focus:opacity-80 navbar-brand" href="{% url 'load_home' %}">
+                <img class="w-auto h-16" src="{% static 'images/SPORTEN Logo.png' %}" alt="SPORTEN Logo">
+            </a>
 
-      </div>
-  
-      <!-- Button Group -->
-      <div class="flex items-center gap-x-2 ms-auto py-1 md:ps-6 md:order-3 md:col-span-3">
-
-        <div class="md:hidden">
-          <button type="button" class="hs-collapse-toggle size-[38px] flex justify-center items-center text-sm font-semibold rounded-xl border border-gray-200 text-black hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none" data-hs-collapse="#navbar-collapse-with-animation" aria-controls="navbar-collapse-with-animation" aria-label="Toggle navigation">
-            <svg class="hs-collapse-open:hidden flex-shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
-            <svg class="hs-collapse-open:block hidden flex-shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-          </button>
+            <!-- Navigation Links -->
+            <div class="hidden md:flex md:items-center md:gap-x-7">
+                <a class="inline-block text-black hover:text-gray-600" href="#">Sports</a>
+                <a class="inline-block text-black hover:text-gray-600" href="#">Venues</a>
+                <a class="inline-block text-black hover:text-gray-600" href="#">Events</a>
+                <a class="inline-block text-black hover:text-gray-600" href="{% url 'about' %}">About</a>
+            </div>
         </div>
 
+        <!-- Mobile Toggle Button -->
+        <div class="flex items-center gap-x-2 ms-auto md:hidden">
+            <button type="button" class="hs-collapse-toggle size-[38px] flex justify-center items-center text-sm font-semibold rounded-xl border border-gray-200 text-black hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none" data-hs-collapse="#navbar-collapse-with-animation" aria-controls="navbar-collapse-with-animation" aria-label="Toggle navigation">
+                <svg class="hs-collapse-open:hidden flex-shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
+                <svg class="hs-collapse-open:block hidden flex-shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+        </div>
+
+        <!-- Account Section -->
         {% if request.path != "/login/" %}
-          {% if request.user.is_authenticated %}
-            <button type="button" id="logout-button" onclick="window.location.href='{% url 'logoutPage' %}'" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl border border-gray-200 text-black hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none">
-              Log out
-            </button>
-          {% else %}
-            <button type="button" id="login-button" onclick="window.location.href='{% url 'loginPage' %}'" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl border border-gray-200 text-black hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none">
-              Log in
-            </button>
-            <button type="button" id="register-button" onclick="window.location.href='{% url 'registerPage' %}'" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl border border-gray-200 text-black hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none">
-              Register
-            </button>
-            {% endif %}
+            <div class="flex items-center gap-x-2 ms-auto">
+                {% if request.user.is_authenticated %}
+                    <div class="relative inline-block text-left">
+                        <button type="button" id="account-button" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl border border-gray-200 text-black hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none" aria-expanded="false" aria-haspopup="true">
+                            My Account <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>
+                        </button>
+                        <div id="account-menu" class="dropdown-menu hidden">
+                            <a class="dropdown-item" href="{% url 'my_bookings' %}">My Bookings</a>
+                            <a class="dropdown-item" href="#">My Profile</a>
+                            <a class="dropdown-item" href="{% url 'logoutPage' %}">Log out</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <button type="button" id="login-button" onclick="window.location.href='{% url 'loginPage' %}'" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl border border-gray-200 text-black hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none">
+                        Log in
+                    </button>
+                    <button type="button" id="register-button" onclick="window.location.href='{% url 'registerPage' %}'" class="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-xl border border-gray-200 text-black hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none">
+                        Register
+                    </button>
+                {% endif %}
+            </div>
         {% endif %}
 
-      </div>
-  
-      <!-- Collapsable Buttons -->
-      <div id="navbar-collapse-with-animation" class="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow md:block md:w-auto md:basis-auto md:order-2 md:col-span-6">
-        <div class="flex flex-col gap-y-4 gap-x-0 mt-5 md:flex-row md:justify-center md:items-center md:gap-y-0 md:gap-x-7 md:mt-0">
-          <div>
-            <a class="inline-block text-black hover:text-gray-600" href="#">Sports</a>
-          </div>
-          <div>
-            <a class="inline-block text-black hover:text-gray-600" href="#">Venues</a>
-          </div>
-          <div>
-            <a class="inline-block text-black hover:text-gray-600" href="#">Events</a>
-          </div>
-          <div>
-            <a class="inline-block text-black hover:text-gray-600" href="{% url 'about'%}">About</a>
-          </div>
+        <!-- Collapsable Links -->
+        <div id="navbar-collapse-with-animation" class="hs-collapse hidden overflow-hidden transition-all duration-300 basis-full grow md:hidden">
+            <div class="flex flex-col gap-y-4 gap-x-0 mt-5 md:flex-row md:justify-center md:items-center md:gap-y-0 md:gap-x-7 md:mt-0">
+                <div>
+                    <a class="inline-block text-black hover:text-gray-600" href="#">Sports</a>
+                </div>
+                <div>
+                    <a class="inline-block text-black hover:text-gray-600" href="#">Venues</a>
+                </div>
+                <div>
+                    <a class="inline-block text-black hover:text-gray-600" href="#">Events</a>
+                </div>
+                <div>
+                    <a class="inline-block text-black hover:text-gray-600" href="{% url 'about' %}">About</a>
+                </div>
+            </div>
         </div>
-      </div>
     </nav>
-  </header>
+</header>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const accountButton = document.getElementById('account-button');
+        const accountMenu = document.getElementById('account-menu');
+
+        accountButton.addEventListener('click', function() {
+            const isExpanded = accountButton.getAttribute('aria-expanded') === 'true';
+            accountButton.setAttribute('aria-expanded', !isExpanded);
+            accountMenu.classList.toggle('show');
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!accountButton.contains(event.target) && !accountMenu.contains(event.target)) {
+                accountButton.setAttribute('aria-expanded', 'false');
+                accountMenu.classList.remove('show');
+            }
+        });
+    });
+</script>

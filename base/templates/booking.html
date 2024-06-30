@@ -3,6 +3,13 @@
 
 {% block css %}
 
+    <style>
+        #calendar {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 10px;
+        }
+    </style>
 {% endblock css %}
 
 {% block headerjs %}
@@ -12,7 +19,6 @@
             loadCalendar();
         });
     </script>
-
 {% endblock headerjs %}
 
 {% block content %}
@@ -29,13 +35,17 @@
     let calendar;
     let calendarEl;
 
-
     document.addEventListener('DOMContentLoaded', function() {
         loadCalendar();
+        window.addEventListener('resize', function() {
+            if (calendar) {
+                calendar.updateSize();
+            }
+        });
     });
 
     function loadCalendar() {
-        const holidayData = JSON.parse(document.getElementById('holidays').textContent); 
+        const holidayData = JSON.parse(document.getElementById('holidays').textContent);
         var holidayDates = Object.values(holidayData).map(holiday => holiday.holidayDate);
 
         calendarEl = document.getElementById('calendar');
@@ -54,13 +64,19 @@
                 var selectedDateStr = info.startStr;
                 return !holidayDates.includes(selectedDateStr);
             },
+            height: 'auto',
+            contentHeight: 'auto',
+            aspectRatio: 1.35,
+            windowResize: function(view) {
+                calendar.updateSize(); // Update calendar size on window resize
+            }
         });
 
         calendar.render();
     }
 
     function loadTimeSlots(info) {
-        const courtsData = JSON.parse(document.getElementById('courts').textContent); 
+        const courtsData = JSON.parse(document.getElementById('courts').textContent);
         const resources = courtsData.map(court => ({
             id: court.id,
             title: court.courtName
@@ -89,9 +105,7 @@
         populateTimeline(info);
     }
 
-
     function handleDateSelected(info) {
-        // Load Timeline View 
         if (calendar.view.type === 'dayGridMonth') {
             loadTimeSlots(info);  // Pass selected date to loadTimeSlots
         } 
@@ -141,30 +155,26 @@
         tags:['temp'],
     };
 
-    // 2. Add event to the calendar
-    calendar.addEvent(tempEvent);
+        calendar.addEvent(tempEvent);
 
-    // 3. Log the event for debugging
-    console.log('Event added:', tempEvent);
+        console.log('Event added:', tempEvent);
 
-    // 4. Update the calendar view
-    calendar.render();
-    //createBooking(); 
+        calendar.render();
+        //createBooking(); 
     }
 
-    function createBooking(){
+    function createBooking() {
         const csrfToken = '{{ csrf_token }}';
         const bookings = new FormData();
         bookings.append('csrfmiddlewaretoken', csrfToken);
         const eventsArray = calendar.getEvents();
 
-        // Save events from calendar
         const serializedEvents = eventsArray.map(event => ({
             title: event.title,
-            start: event.start.toISOString(), // Convert to ISO string format
-            end: event.end ? event.end.toISOString() : null, // Convert to ISO string format if end exists
-            resourceId: event.getResources().map(resource => resource.id), // Convert to array of resource IDs
-            color: event.backgroundColor, // Assuming color is stored in backgroundColor
+            start: event.start.toISOString(),
+            end: event.end ? event.end.toISOString() : null,
+            resourceId: event.getResources().map(resource => resource.id),
+            color: event.backgroundColor,
             allDay: event.allDay
         }));
 
@@ -200,4 +210,3 @@
 
 </script> 
 {% endblock js %}
-
