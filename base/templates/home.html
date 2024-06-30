@@ -80,7 +80,28 @@
     <!-- End Grid -->
   </div>
   <!-- End Card Blog -->
-  
+  <!-- Events Section -->
+<div id="events" class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+  <h2 class="text-3xl font-bold mb-6">Upcoming Events</h2>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for event in events %}
+      <div class="group flex flex-col h-full bg-white border border-gray-200 shadow-sm rounded-xl">
+          <div class="h-52 flex justify-center items-center rounded-t-xl overflow-hidden">
+              <img src="{{ event.imgRef.url }}" alt="{{ event.eventName }}" class="h-full w-full object-cover">
+          </div>
+          <div class="p-4 md:p-6">
+              <h3 class="text-xl font-semibold text-gray-800">
+                  {{ event.eventName }}
+              </h3>
+              <p class="mt-3 text-gray-500">
+                  {{ event.eventDescription }}
+              </p>
+          </div>
+      </div>
+      {% endfor %}
+  </div>
+</div>
+<!-- End Events Section -->
 
 {% endblock content %}
 

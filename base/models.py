@@ -109,7 +109,7 @@ class Holiday(models.Model):
 
 class Event(models.Model):
     eventName = models.CharField(max_length=255)
-    imgRef = models.ImageField()
+    imgRef = models.ImageField(upload_to='images/')
     eventDescription = models.TextField()
     showToggle = models.BooleanField()
     

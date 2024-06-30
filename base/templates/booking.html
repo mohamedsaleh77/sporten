@@ -28,118 +28,186 @@
 
 {% block js %}
 <script>
-    let calendar;
-    let calendarEl;
+document.addEventListener('DOMContentLoaded', function() {
+    loadCalendar();
+    window.addEventListener('resize', function() {
+        if (calendar) {
+            calendar.updateSize();
+        }
+    });
+});
 
-    document.addEventListener('DOMContentLoaded', function() {
-        loadCalendar();
-        window.addEventListener('resize', function() {
-            if (calendar) {
-                calendar.updateSize();
+function loadCalendar() {
+    const holidayData = JSON.parse(document.getElementById('holidays').textContent);
+    var holidayDates = Object.values(holidayData).map(holiday => holiday.holidayDate);
+
+    calendarEl = document.getElementById('calendar');
+    calendar = new FullCalendar.Calendar(calendarEl, {
+        schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
+        initialView: 'dayGridMonth',
+        selectable: true,
+        dateClick: function(info) {
+            var today = new Date().setHours(0, 0, 0, 0);
+            var selectedDate = new Date(info.dateStr).setHours(0, 0, 0, 0);
+            if (selectedDate >= today) {
+                handleDateSelected(info);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Cannot select past dates.'
+                });
             }
-        });
+        },
+        selectAllow: function(info) {
+            var today = new Date().setHours(0, 0, 0, 0);
+            var selectedDate = new Date(info.startStr).setHours(0, 0, 0, 0);
+            return selectedDate >= today && !holidayDates.includes(info.startStr);
+        },
+        events: fetchEvents,
+        height: 'auto',
+        contentHeight: 'auto',
+        aspectRatio: 1.35,
+        windowResize: function(view) {
+            calendar.updateSize(); // Update calendar size on window resize
+        }
     });
 
-    function loadCalendar() {
-        const holidayData = JSON.parse(document.getElementById('holidays').textContent);
-        var holidayDates = Object.values(holidayData).map(holiday => holiday.holidayDate);
+    calendar.render();
+}
 
-        calendarEl = document.getElementById('calendar');
-        calendar = new FullCalendar.Calendar(calendarEl, {
-            schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
-            initialView: 'dayGridMonth',
-            selectable: true,
-            dateClick: function(info) {
-                var selectedDate = info.dateStr;
-                handleDateSelected(selectedDate);
-            },
-            selectAllow: function(info) {
-                var selectedDateStr = info.startStr;
-                return !holidayDates.includes(selectedDateStr);
-            },
-            height: 'auto',
-            contentHeight: 'auto',
-            aspectRatio: 1.35,
-            windowResize: function(view) {
-                calendar.updateSize(); // Update calendar size on window resize
-            }
-        });
+function fetchEvents(fetchInfo, successCallback, failureCallback) {
+    fetch('/fetch_events/', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(events => {
+        successCallback(events);
+    })
+    .catch(error => {
+        console.error('Error fetching events:', error);
+        failureCallback(error);
+    });
+}
 
-        calendar.render();
-    }
+function handleDateSelected(info) {
+    loadTimeSlots(info.dateStr);
+}
 
-    function loadTimeSlots(info) {
-        const courtsData = JSON.parse(document.getElementById('courts').textContent);
-        const resources = courtsData.map(court => ({
-            id: court.id,
-            title: court.courtName
-        }));
+function loadTimeSlots(dateStr) {
+    const courtsData = JSON.parse(document.getElementById('courts').textContent);
+    const resources = courtsData.map(court => ({
+        id: court.id,
+        title: court.courtName
+    }));
 
-        calendar.changeView('resourceTimelineDay');
-        calendar.setOption('resources', resources);
-        calendar.setOption('scrollTime', courtsData[0].opening);
-        calendar.setOption('slotMinTime', courtsData[0].opening);
-        calendar.setOption('slotMaxTime', courtsData[0].closing);
-        calendar.setOption('selectable', true);
+    calendar.changeView('resourceTimelineDay');
+    calendar.setOption('resources', resources);
+    calendar.setOption('scrollTime', courtsData[0].opening);
+    calendar.setOption('slotMinTime', courtsData[0].opening);
+    calendar.setOption('slotMaxTime', courtsData[0].closing);
+    calendar.setOption('selectable', true);
 
-        calendar.setOption('select', function(info) {
-            alert('selected ' + info.startStr + ' to ' + info.endStr);
+    calendar.setOption('select', function(info) {
+        var today = new Date().setHours(0, 0, 0, 0);
+        var selectedDate = new Date(info.startStr).setHours(0, 0, 0, 0);
 
+        if (selectedDate >= today) {
             var startTime = info.startStr;
             var endTime = info.endStr;
             var courtId = info.resource.id;
 
             handleEventCreation(startTime, endTime, courtId);
-        });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Cannot select past dates.'
+            });
+        }
+    });
 
-        calendar.setOption('selectMirror', true);
-        calendar.gotoDate(info);
-    }
+    calendar.setOption('selectMirror', true);
+    calendar.gotoDate(dateStr);
+}
 
-    function handleDateSelected(info) {
-        if (calendar.view.type === 'dayGridMonth') {
-            loadTimeSlots(info); 
-        } 
-    }
+function handleEventCreation(startTime, endTime, courtId) {
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
 
-    function handleEventCreation(startTime, endTime, courtId) {
-        var tempEvent = {
-            title: 'New Booking',
-            start: startTime,
-            end: endTime,
-            resourceId: courtId,
-            color: '#378006',
-            allDay: false
-        };
+    const formattedStartDate = startDate.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
+    });
 
-        calendar.addEvent(tempEvent);
+    const formattedEndDate = endDate.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
+    });
 
-        console.log('Event added:', tempEvent);
+    Swal.fire({
+        title: 'Confirm Booking',
+        html: `<p>Are you sure you want to make a booking from <strong>${formattedStartDate}</strong> to <strong>${formattedEndDate}</strong>?</p>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, book it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            var tempEvent = {
+                title: 'New Booking',
+                start: startTime,
+                end: endTime,
+                resourceId: courtId,
+                color: '#378006',
+                allDay: false
+            };
 
-        calendar.render();  
-        createBooking();
-    }
+            createBooking(tempEvent);
+        }
+    });
+}
 
-    function createBooking() {
-        const csrfToken = '{{ csrf_token }}';
-        const bookings = new FormData();
-        bookings.append('csrfmiddlewaretoken', csrfToken);
-        const eventsArray = calendar.getEvents();
+function createBooking(tempEvent) {
+    const csrfToken = '{{ csrf_token }}';
+    const bookings = new FormData();
+    bookings.append('csrfmiddlewaretoken', csrfToken);
+    bookings.append('events', JSON.stringify([{
+        title: tempEvent.title,
+        start: tempEvent.start,
+        end: tempEvent.end,
+        resourceId: tempEvent.resourceId,
+        color: tempEvent.color,
+        allDay: tempEvent.allDay
+    }]));
 
-        const serializedEvents = eventsArray.map(event => ({
-            title: event.title,
-            start: event.start.toISOString(),
-            end: event.end ? event.end.toISOString() : null,
-            resourceId: event.getResources().map(resource => resource.id),
-            color: event.backgroundColor,
-            allDay: event.allDay
-        }));
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/create_booking/', true);
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+                calendar.addEvent(response);
+                console.log("Booking created and event added:", response);
+            } else {
+                console.log("Failed to create booking:", xhr.responseText);
+            }
+        }
+    };
+    xhr.send(bookings);
+}
 
-        bookings.append('events', JSON.stringify(serializedEvents));
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/create_booking/', true);
-        xhr.send(bookings);
-        console.log("sent");
-    }
 </script>
 {% endblock js %}

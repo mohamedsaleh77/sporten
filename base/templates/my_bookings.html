@@ -1,26 +1,60 @@
 {% extends "base.html" %}
-{% block title %}My Bookings{% endblock %}
+
+{% block title %}
+    <title>My Bookings</title>
+{% endblock %}
 
 {% block content %}
-<h1>My Bookings</h1>
-<table class="table table-striped table-bordered">
-    <thead>
-        <tr>
-            <th>Booking ID</th>
-            <th>Status</th>
-            <th>Price</th>
-            <th>Book Time</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for booking in bookings %}
-        <tr>
-            <td>{{ booking.bookingID }}</td>
-            <td>{{ booking.status }}</td>
-            <td>{{ booking.price }}</td>
-            <td>{{ booking.bookTime }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <div class="container mt-5">
+        <!-- <h1>My Bookings</h1> -->
+        <table id="bookingsTable" class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Booking ID</th>
+                    <th>Venue Name</th>
+                    <th>Court Name</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking_court in bookings %}
+                <tr>
+                    <td>{{ booking_court.booking.bookingID }}</td>
+                    <td>{{ booking_court.court.venueID.venueName }}</td>
+                    <td>{{ booking_court.court.courtName }}</td>
+                    <td>{{ booking_court.startTime }}</td>
+                    <td>{{ booking_court.endTime }}</td>
+                    <td>{{ booking_court.booking.status }}</td>
+                    <td>
+                        {% if booking_court.startTime|timeuntil < '48:00:00' %}
+                            <button class="btn btn-primary btn-sm" onclick="editBooking('{{ booking_court.booking.bookingID }}')">Edit</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+{% block js %}
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
+<script>
+    $(document).ready(function() {
+        $('#bookingsTable').DataTable();
+    });
+
+    function editBooking(bookingId) {
+        window.location.href = "{% url 'user_update_booking' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', bookingId);
+    }
+</script>
 {% endblock %}

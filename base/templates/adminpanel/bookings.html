@@ -10,7 +10,7 @@
     <table id="bookingsTable" class="table table-striped table-bordered">
         <thead>
             <tr>
-                <th>Booking ID</th>
+                <th>Booked At</th>
                 <th>User Name</th>
                 <th>Venue Name</th>
                 <th>Court Name</th>
@@ -23,7 +23,7 @@
         <tbody>
             {% for booking_court in bookings %}
             <tr>
-                <td>{{ booking_court.booking.bookingID }}</td>
+                <td>{{ booking_court.booking.bookTime }}</td>
                 <td>{{ booking_court.booking.userID.name }}</td>
                 <td>{{ booking_court.court.venueID.venueName }}</td>
                 <td>{{ booking_court.court.courtName }}</td>
@@ -32,7 +32,7 @@
                 <td>
                     <select onchange="updateBookingStatus('{{ booking_court.booking.bookingID }}', this.value)" class="form-control">
                         <option value="PENDING" {% if booking_court.booking.status == 'PENDING' %}selected{% endif %}>Pending</option>
-                        <option value="CONFIRMED" {% if booking_court.booking.status == 'COMPLETED' %}selected{% endif %}>Completed</option>
+                        <option value="COMPLETED" {% if booking_court.booking.status == 'COMPLETED' %}selected{% endif %}>Completed</option>
                         <option value="CANCELLED" {% if booking_court.booking.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
                     </select>
                 </td>
@@ -58,7 +58,6 @@
     $(document).ready(function() {
         $('#bookingsTable').DataTable();
     });
-
 
     function updateBookingStatus(bookingId, status) {
         $.ajax({

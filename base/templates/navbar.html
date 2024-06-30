@@ -10,9 +10,9 @@
 
             <!-- Navigation Links -->
             <div class="hidden md:flex md:items-center md:gap-x-7">
-                <a class="inline-block text-black hover:text-gray-600" href="#">Sports</a>
+                <!-- <a class="inline-block text-black hover:text-gray-600" href="#">Sports</a> -->
                 <a class="inline-block text-black hover:text-gray-600" href="#">Venues</a>
-                <a class="inline-block text-black hover:text-gray-600" href="#">Events</a>
+                <a class="inline-block text-black hover:text-gray-600" href="#events">Events</a>
                 <a class="inline-block text-black hover:text-gray-600" href="{% url 'about' %}">About</a>
             </div>
         </div>
@@ -35,7 +35,10 @@
                         </button>
                         <div id="account-menu" class="dropdown-menu hidden">
                             <a class="dropdown-item" href="{% url 'my_bookings' %}">My Bookings</a>
-                            <a class="dropdown-item" href="#">My Profile</a>
+                            <a class="dropdown-item" href="{% url 'my_profile' %}">My Profile</a>
+                            {% if request.user.is_staff %}
+                                <a class="dropdown-item" href="{% url 'admin_dashboard' %}">Admin Panel</a>
+                            {% endif %}
                             <a class="dropdown-item" href="{% url 'logoutPage' %}">Log out</a>
                         </div>
                     </div>
@@ -60,7 +63,7 @@
                     <a class="inline-block text-black hover:text-gray-600" href="#">Venues</a>
                 </div>
                 <div>
-                    <a class="inline-block text-black hover:text-gray-600" href="#">Events</a>
+                    <a class="inline-block text-black hover:text-gray-600" href="#events">Events</a>
                 </div>
                 <div>
                     <a class="inline-block text-black hover:text-gray-600" href="{% url 'about' %}">About</a>

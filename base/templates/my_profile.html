@@ -1,11 +1,56 @@
 {% extends "base.html" %}
-{% block title %}My Profile{% endblock %}
+{% load custom_filters %}
+
+{% block title %}
+    <title>My Profile</title>
+{% endblock %}
 
 {% block content %}
-<h1>My Profile</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-primary">Save</button>
-</form>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h2>My Profile</h2>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="id_name">Name</label>
+                                {{ form.name|add_class:"form-control" }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_email">Email</label>
+                                {{ form.email|add_class:"form-control" }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_phone_num">Phone Number</label>
+                                {{ form.phone_num|add_class:"form-control" }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_password1">Password</label>
+                                {{ form.password1|add_class:"form-control" }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_password2">Confirm Password</label>
+                                {{ form.password2|add_class:"form-control" }}
+                            </div>
+                            <div class="form-group text-center">
+                                <button type="submit" class="btn btn-primary">Save</button>
+                                <a href="{% url 'load_home' %}" class="btn btn-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<!-- Add any JavaScript needed for this form here -->
 {% endblock %}
