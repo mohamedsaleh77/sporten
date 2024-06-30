@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from .models import User
-from .models import User, Court, Venue ,Booking, BookingCourt, Event
+from .models import User, Court, Venue ,Booking, BookingCourt, Event, BannerImage
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
@@ -59,7 +59,7 @@ class CourtForm(forms.ModelForm):
 class VenueForm(forms.ModelForm):
     class Meta:
         model = Venue
-        fields = ['venueName', 'bookingToggle']
+        fields = ['venueName', 'bookingToggle', 'image', 'description']
 
 
 class BookingForm(forms.ModelForm):
@@ -115,9 +115,12 @@ class UserProfileForm(UserChangeForm):
         return user
 
 
-
-
 class EventForm(forms.ModelForm):
     class Meta:
         model = Event
         fields = ['eventName', 'imgRef', 'eventDescription', 'showToggle']
+
+class BannerImageForm(forms.ModelForm):
+    class Meta:
+        model = BannerImage
+        fields = ['image', 'description']

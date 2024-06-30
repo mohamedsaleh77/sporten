@@ -10,76 +10,38 @@
 
 {% include "banner.html" %}
 
-<!-- Card Blog -->
-<div class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
-    <!-- Grid -->
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Card -->
+
+
+
+<!-- Venues Section -->
+<div id="venues" class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
+  <h2 class="text-3xl font-bold mb-6">Venues</h2>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for venue in venues %}
       <div class="group flex flex-col h-full bg-white border border-gray-200 shadow-sm rounded-xl">
-        <div class="h-52 flex justify-center items-center rounded-t-xl overflow-hidden">
-          <img src="{% static 'images/sportsarena.jpeg' %}" alt="Atlassian Logo" class="h-full w-full object-cover">
-        </div>
-        <div class="p-4 md:p-6">
-          <h3 class="text-xl font-semibold text-gray-800">
-            Sports Arena
-          </h3>
-          <p class="mt-3 text-gray-500">
-            Holds Indoor Courts for Futsal, Badminton and Volleyball and more!
-          </p>
-        </div>
-        <div class="mt-auto flex border-t border-gray-200 divide-x divide-gray-200">
-          <a class="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-ee-xl bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none" href="{% url 'booking' 1 %}">
-            Start Booking
-          </a>
-        </div>
+          <div class="h-52 flex justify-center items-center rounded-t-xl overflow-hidden">
+              {% if venue.image %}
+              <img src="{{ venue.image.url }}" alt="{{ venue.venueName }}" class="h-full w-full object-cover">
+              {% endif %}
+          </div>
+          <div class="p-4 md:p-6">
+              <h3 class="text-xl font-semibold text-gray-800">
+                  {{ venue.venueName }}
+              </h3>
+              <p class="mt-3 text-gray-500">
+                  {{ venue.description }}
+              </p>
+          </div>
+          <div class="mt-auto flex border-t border-gray-200 divide-x divide-gray-200">
+              <a class="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-ee-xl bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none" href="{% url 'booking' venue.id %}">
+                  Start Booking
+              </a>
+          </div>
       </div>
-      <!-- End Card -->
-  
-      <!-- Card -->
-      <div class="group flex flex-col h-full bg-white border border-gray-200 shadow-sm rounded-xl">
-        <div class="h-52 flex justify-center items-center rounded-t-xl overflow-hidden">
-          <img src="{% static 'images/swimmingpool.jpg' %}" alt="Asana Logo" class="h-full w-full object-cover">
-        </div>
-        <div class="p-4 md:p-6">
-          <h3 class="text-xl font-semibold text-gray-800">
-            Swimming Pool
-          </h3>
-          <p class="mt-3 text-gray-500">
-            An Olympic-size swimming pool accompanied with a small children’s swimming pool
-          </p>
-        </div>
-        <div class="mt-auto flex border-t border-gray-200 divide-x divide-gray-200">
-          <a class="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-ee-xl bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none" href="{% url 'booking' 3 %}">
-            Start Booking
-          </a>
-        </div>
-      </div>
-      <!-- End Card -->
-  
-      <!-- Card -->
-      <div class="group flex flex-col h-full bg-white border border-gray-200 shadow-sm rounded-xl">
-        <div class="h-52 flex justify-center items-center bg-amber-500 rounded-t-xl overflow-hidden">
-          <img src="{% static 'images/football.jpg' %}" alt="Slack Logo" class="h-full w-full object-cover">
-        </div>
-        <div class="p-4 md:p-6">
-          <h3 class="text-xl font-semibold text-gray-800">
-            Football Field
-          </h3>
-          <p class="mt-3 text-gray-500">
-            Grass Field suitable for Football and Rugby. 
-          </p>
-        </div>
-        <div class="mt-auto flex border-t border-gray-200 divide-x divide-gray-200">
-          <a class="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-ee-xl bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none" href="{% url 'booking' 2 %}">
-            Start Booking
-          </a>
-        </div>
-      </div>
-      <!-- End Card -->
-    </div>
-    <!-- End Grid -->
+      {% endfor %}
   </div>
-  <!-- End Card Blog -->
+</div>
+<!-- End Venues Section -->
   <!-- Events Section -->
 <div id="events" class="max-w-[85rem] px-4 py-10 sm:px-6 lg:px-8 lg:py-14 mx-auto">
   <h2 class="text-3xl font-bold mb-6">Upcoming Events</h2>

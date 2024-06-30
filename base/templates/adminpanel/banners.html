@@ -1,0 +1,35 @@
+{% extends "adminpanel/base_admin.html" %}
+{% load static %}
+
+{% block title %}
+    <title>Manage Banners</title>
+{% endblock %}
+
+{% block content %}
+    <h1>Manage Banners</h1>
+    <a href="{% url 'add_banner' %}" class="btn btn-primary mb-3">Add New Banner</a>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for banner in banners %}
+            <tr>
+                <td><img src="{{ banner.image.url }}" alt="{{ banner.description }}" style="width: 100px; height: auto;"></td>
+                <td>{{ banner.description }}</td>
+                <td>
+                    <a href="{% url 'edit_banner' banner.id %}" class="btn btn-primary btn-sm">Edit</a>
+                    <form action="{% url 'delete_banner' banner.id %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

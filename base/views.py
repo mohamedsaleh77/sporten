@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_POST
 from django.db.models import Prefetch
 from .models import Court, Venue
-from .forms import CourtForm, VenueForm, BookingForm, BookingCourtForm, CustomUserUpdateForm, UserProfileForm, EventForm
+from .forms import CourtForm, VenueForm, BookingForm, BookingCourtForm, CustomUserUpdateForm, UserProfileForm, EventForm, BannerImageForm
 import os
 from django.http import HttpResponse, HttpResponseRedirect
 from django.conf import settings
@@ -31,7 +31,9 @@ from django.forms.models import model_to_dict
 
 def load_home(request):
     events = Event.objects.filter(showToggle=True)
-    return render(request, 'home.html', {'events': events})
+    venues = Venue.objects.filter(bookingToggle=True)
+    banners = BannerImage.objects.all()
+    return render(request, 'home.html', {'events': events, 'banners': banners, 'venues': venues})
 
 def about(request):
     return render(request, 'about.html')
@@ -82,18 +84,36 @@ def logoutPage(request):
 
 #============================================================================
 
-# Booking Related
 @login_required
 def bookingPage(request, pk):
-    venueGet = Venue.objects.get(id=pk)
+    venueGet = get_object_or_404(Venue, id=pk)
     courtsGet = Court.objects.filter(venueID=venueGet, bookingToggle=True)
     courts = list(courtsGet.values())
     holidaysGet = Holiday.objects.filter(venueID=venueGet)
     holidays = list(holidaysGet.values())
+    
+    # Convert the venue to a dictionary excluding the 'image' field
     venue_dict = model_to_dict(venueGet)
+    if 'image' in venue_dict:
+        del venue_dict['image']
+    
     context = {'courts': courts, "venue": venue_dict, "holidays": holidays}
     print(context)
     return render(request, 'booking.html', context)
+
+
+# Booking Related
+# @login_required
+# def bookingPage(request, pk):
+#     venueGet = Venue.objects.get(id=pk)
+#     courtsGet = Court.objects.filter(venueID=venueGet, bookingToggle=True)
+#     courts = list(courtsGet.values())
+#     holidaysGet = Holiday.objects.filter(venueID=venueGet)
+#     holidays = list(holidaysGet.values())
+#     venue_dict = model_to_dict(venueGet)
+#     context = {'courts': courts, "venue": venue_dict, "holidays": holidays}
+#     print(context)
+#     return render(request, 'booking.html', context)
 
 def dateSelected(request, date):
     date_obj = datetime.strptime(date, "%Y-%m-%d").date()
@@ -473,12 +493,46 @@ def admin_courts(request):
     courts = Court.objects.all()
     return render(request, 'adminpanel/courts.html', {'courts': courts})
 
+
 @login_required
-@user_passes_test(is_admin)
+@user_passes_test(lambda u: u.is_superuser)
 def admin_venues(request):
     venues = Venue.objects.all()
     return render(request, 'adminpanel/venues.html', {'venues': venues})
 
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def create_venue(request):
+    if request.method == 'POST':
+        form = VenueForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('admin_venues')
+    else:
+        form = VenueForm()
+    return render(request, 'adminpanel/venue_form.html', {'form': form, 'title': 'Add Venue'})
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def update_venue(request, venue_id):
+    venue = get_object_or_404(Venue, id=venue_id)
+    if request.method == 'POST':
+        form = VenueForm(request.POST, request.FILES, instance=venue)
+        if form.is_valid():
+            form.save()
+            return redirect('admin_venues')
+    else:
+        form = VenueForm(instance=venue)
+    return render(request, 'adminpanel/venue_form.html', {'form': form, 'title': 'Edit Venue'})
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def delete_venue(request, venue_id):
+    venue = get_object_or_404(Venue, id=venue_id)
+    if request.method == 'POST':
+        venue.delete()
+        return redirect('admin_venues')
+    return render(request, 'adminpanel/venue_confirm_delete.html', {'venue': venue})
 
 @login_required
 @user_passes_test(is_admin)
@@ -505,17 +559,17 @@ def create_court(request):
         form = CourtForm()
     return render(request, 'adminpanel/court_form.html', {'form': form})
 
-@login_required
-@user_passes_test(is_admin)
-def create_venue(request):
-    if request.method == 'POST':
-        form = VenueForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('admin_venues')
-    else:
-        form = VenueForm()
-    return render(request, 'adminpanel/venue_form.html', {'form': form})
+# @login_required
+# @user_passes_test(is_admin)
+# def create_venue(request):
+#     if request.method == 'POST':
+#         form = VenueForm(request.POST)
+#         if form.is_valid():
+#             form.save()
+#             return redirect('admin_venues')
+#     else:
+#         form = VenueForm()
+#     return render(request, 'adminpanel/venue_form.html', {'form': form})
 
 @login_required
 @user_passes_test(is_admin)
@@ -537,25 +591,25 @@ def delete_court(request, court_id):
     court.delete()
     return redirect('admin_courts')
 
-@login_required
-@user_passes_test(is_admin)
-def update_venue(request, venue_id):
-    venue = get_object_or_404(Venue, id=venue_id)
-    if request.method == 'POST':
-        form = VenueForm(request.POST, instance=venue)
-        if form.is_valid():
-            form.save()
-            return redirect('admin_venues')
-    else:
-        form = VenueForm(instance=venue)
-    return render(request, 'adminpanel/venue_form.html', {'form': form})
+# @login_required
+# @user_passes_test(is_admin)
+# def update_venue(request, venue_id):
+#     venue = get_object_or_404(Venue, id=venue_id)
+#     if request.method == 'POST':
+#         form = VenueForm(request.POST, instance=venue)
+#         if form.is_valid():
+#             form.save()
+#             return redirect('admin_venues')
+#     else:
+#         form = VenueForm(instance=venue)
+#     return render(request, 'adminpanel/venue_form.html', {'form': form})
 
-@login_required
-@user_passes_test(is_admin)
-def delete_venue(request, venue_id):
-    venue = get_object_or_404(Venue, id=venue_id)
-    venue.delete()
-    return redirect('admin_venues')
+# @login_required
+# @user_passes_test(is_admin)
+# def delete_venue(request, venue_id):
+#     venue = get_object_or_404(Venue, id=venue_id)
+#     venue.delete()
+#     return redirect('admin_venues')
 
 
 @login_required
@@ -826,3 +880,44 @@ def toggle_event_status(request, event_id):
         return JsonResponse({'success': False, 'error': 'Event not found'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def admin_banners(request):
+    banners = BannerImage.objects.all()
+    return render(request, 'adminpanel/banners.html', {'banners': banners})
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def add_banner(request):
+    if request.method == 'POST':
+        form = BannerImageForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('admin_banners')
+    else:
+        form = BannerImageForm()
+    return render(request, 'adminpanel/banner_form.html', {'form': form, 'title': 'Add Banner'})
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def edit_banner(request, banner_id):
+    banner = get_object_or_404(BannerImage, id=banner_id)
+    if request.method == 'POST':
+        form = BannerImageForm(request.POST, request.FILES, instance=banner)
+        if form.is_valid():
+            form.save()
+            return redirect('admin_banners')
+    else:
+        form = BannerImageForm(instance=banner)
+    return render(request, 'adminpanel/banner_form.html', {'form': form, 'title': 'Edit Banner'})
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def delete_banner(request, banner_id):
+    banner = get_object_or_404(BannerImage, id=banner_id)
+    if request.method == 'POST':
+        banner.delete()
+        return redirect('admin_banners')
+    return render(request, 'adminpanel/banner_confirm_delete.html', {'banner': banner})
