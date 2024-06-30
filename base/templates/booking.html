@@ -18,8 +18,9 @@
 {% block content %}
     {{ courts|json_script:"courts"|safe }}
     {{ holidays|json_script:"holidays"|safe }}
+    {{ venue|json_script:"venue"|safe }}
 
-        <div id="calendar"></div>
+    <div id="calendar"></div>
 
 {% endblock content %}
 
@@ -44,6 +45,7 @@
             timeZone: 'UTC',
             selectable: true,
             selectOverlap: false,
+            aspectRatio: 1.35,
             dateClick: function(info) {
                 var selectedDate = info.dateStr;
                 handleDateSelected(selectedDate);
@@ -70,6 +72,7 @@
         calendar.setOption('slotMinTime', courtsData[0].opening);
         calendar.setOption('slotMaxTime', courtsData[0].closing);
         calendar.setOption('selectable', true);
+        calendar.setOption('headerToolbar', {left: 'title', right:''});
 
         calendar.setOption('select', function(info) {
             alert('selected ' + info.startStr + ' to ' + info.endStr);
@@ -83,6 +86,7 @@
 
         calendar.setOption('selectMirror', true);
         calendar.gotoDate(info);
+        populateTimeline(info);
     }
 
 
@@ -90,19 +94,51 @@
         // Load Timeline View 
         if (calendar.view.type === 'dayGridMonth') {
             loadTimeSlots(info);  // Pass selected date to loadTimeSlots
-
         } 
-    } 
+    }
+
+    async function populateTimeline(date) {
+        const venueData = JSON.parse(document.getElementById('venue').textContent);
+        const venue = venueData.id;
+        
+        console.log('Sending request with date:', date, 'and venue:', venue);
+        
+        $.ajax({
+            url: '/populate_timeline/',
+            method: 'GET',
+            headers: { 
+                'X-CSRFToken': '{{ csrf_token }}' 
+            },
+            data: {
+                date: date,
+                venue: venue
+            },
+            dataType: 'json',
+            success: function(data) {
+                console.log('Response data:', data); // process the bookings data here
+                data.events.forEach(event =>{
+                    console.log(event);
+                    handleEventCreation(event.startTime, event.endTime, event.courtID)
+                });
+
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX Error:', error);
+                console.error('Response:', xhr.responseText);
+            }
+        });
+
+    }
 
     function handleEventCreation(startTime, endTime, courtId) {
     // 1. Create temporary event
     var tempEvent = {
-        title: 'New Booking', // You can set a default title or prompt the user for it
         start: startTime,
         end: endTime,
         resourceId: courtId,
         color: '#378006', // Event color
-        allDay: false
+        allDay: false,
+        tags:['temp'],
     };
 
     // 2. Add event to the calendar
@@ -113,7 +149,7 @@
 
     // 4. Update the calendar view
     calendar.render();
-    createBooking(); 
+    //createBooking(); 
     }
 
     function createBooking(){
@@ -160,7 +196,6 @@
         xhr.open('POST', '/create_booking/', true);
         xhr.send(bookings);
         console.log("sent");
-    
     }
 
 </script> 

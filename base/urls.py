@@ -14,6 +14,7 @@ urlpatterns = [
     
     # Booking and Calendar Handling
     path('booking/<int:pk>/', views.bookingPage, name='booking'),
+    path('populate_timeline/', views.populateTimeline, name='populateTimeline'),
     path('select_date/<str:date>/', views.dateSelected, name="dateSelected"),
     path('create_booking/', views.createBooking, name='createBooking'),
     

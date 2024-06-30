@@ -19,6 +19,8 @@ import subprocess
 import shutil
 from django.urls import reverse
 from django.db.models import Count, Sum
+from dateutil.parser import parse as parse_date
+from django.forms.models import model_to_dict
 
 # Mostly Static Pages
 def load_home(request):
@@ -81,7 +83,9 @@ def bookingPage(request, pk):
     courts = list(courtsGet.values())
     holidaysGet = Holiday.objects.filter(venueID=venueGet)
     holidays = list(holidaysGet.values())
-    context = {'courts': courts, "venue": venueGet, "holidays": holidays}
+    venue_dict = model_to_dict(venueGet)
+    context = {'courts': courts, "venue": venue_dict, "holidays": holidays}
+    print(context)
     return render(request, 'booking.html', context)
 
 def dateSelected(request, date):
@@ -92,8 +96,46 @@ def dateSelected(request, date):
     
     return JsonResponse({'bookings': booking_data})
 
+def populateTimeline(request):
+    if request.method == 'GET':
+        try:
+            date = request.GET.get('date')
+            venue = request.GET.get('venue')
+            if date and venue:
+                courts = list(Court.objects.filter(venueID=venue))
+                bookings = BookingCourt.objects.filter(startTime__date=date, court__in=courts, booking__status__in=['PENDING', 'COMPLETED']).order_by('court', 'startTime')
+                events = []
+                if bookings:
+                    # Initialize the first booking
+                    prev = bookings[0]
 
-from dateutil.parser import parse as parse_date
+                    for b in bookings[1:]:
+                        if b.court == prev.court and b.startTime <= prev.endTime:
+                            # Merge the bookings if they intersect
+                            prev.startTime = min(prev.startTime, b.startTime)
+                            prev.endTime = max(prev.endTime, b.endTime)
+                        else:
+                            # If they do not intersect, add the previous booking to events and start a new one
+                            events.append(prev)
+                            prev = b
+
+                    # Add the last booking
+                    events.append(prev)
+                    serialized_events = []
+                    for event in events:
+                        serialized_event = {
+                            'id': event.id,
+                            'startTime': event.startTime.isoformat(),
+                            'endTime': event.endTime.isoformat(),
+                            'courtID': event.court.id,
+                        }
+                        serialized_events.append(serialized_event)
+                return JsonResponse({'status': 'success', 'events': serialized_events}, status=200)
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Date or venue parameter is missing'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 def createBooking(request):
     print("Received")
@@ -147,6 +189,7 @@ def createBooking(request):
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+    
 
 
 def createBooking_sameh(request):
