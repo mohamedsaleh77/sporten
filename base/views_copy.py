@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_POST
 from django.db.models import Prefetch
 from .models import Court, Venue
-from .forms import CourtForm, VenueForm, BookingForm, BookingCourtForm, CustomUserUpdateForm, UserProfileForm, EventForm
+from .forms import CourtForm, VenueForm, BookingForm, BookingCourtForm, CustomUserUpdateForm, UserProfileForm
 import os
 from django.http import HttpResponse, HttpResponseRedirect
 from django.conf import settings
@@ -21,25 +21,15 @@ from django.urls import reverse
 from django.db.models import Count, Sum
 from django.utils.timezone import now
 from dateutil.parser import parse as parse_date
-from django.views.decorators.csrf import csrf_exempt
 
-from django.forms.models import model_to_dict
+
 
 # Mostly Static Pages
-# def load_home(request):
-#     return render(request, 'home.html')
-
 def load_home(request):
-    events = Event.objects.filter(showToggle=True)
-    return render(request, 'home.html', {'events': events})
+    return render(request, 'home.html')
 
 def about(request):
     return render(request, 'about.html')
-
-def history(request):
-    return render(request, 'history.html')
-
-#============================================================================
 
 # Login, Logout & Register
 def loginPage(request):
@@ -80,21 +70,17 @@ def logoutPage(request):
     logout(request)
     return redirect('load_home')
 
-#============================================================================
-
-# Booking Related
 @login_required
 def bookingPage(request, pk):
     venueGet = Venue.objects.get(id=pk)
-    courtsGet = Court.objects.filter(venueID=venueGet, bookingToggle=True)
+    courtsGet = Court.objects.filter(venueID=venueGet)
     courts = list(courtsGet.values())
     holidaysGet = Holiday.objects.filter(venueID=venueGet)
     holidays = list(holidaysGet.values())
-    venue_dict = model_to_dict(venueGet)
-    context = {'courts': courts, "venue": venue_dict, "holidays": holidays}
-    print(context)
+    context = {'courts': courts, "venue": venueGet, "holidays": holidays}
     return render(request, 'booking.html', context)
 
+# Booking Related
 def dateSelected(request, date):
     date_obj = datetime.strptime(date, "%Y-%m-%d").date()
     bookings = BookingCourt.objects.filter(startTime__date=date_obj)
@@ -104,57 +90,19 @@ def dateSelected(request, date):
     return JsonResponse({'bookings': booking_data})
 
 
-def populateTimeline(request):
-    if request.method == 'GET':
-        try:
-            date = request.GET.get('date')
-            venue = request.GET.get('venue')
-            if date and venue:
-                courts = list(Court.objects.filter(venueID=venue))
-                bookings = BookingCourt.objects.filter(startTime__date=date, court__in=courts, booking__status__in=['PENDING', 'COMPLETED']).order_by('court', 'startTime')
-                events = []
-                if bookings:
-                    # Initialize the first booking
-                    prev = bookings[0]
-
-                    for b in bookings[1:]:
-                        if b.court == prev.court and b.startTime <= prev.endTime:
-                            # Merge the bookings if they intersect
-                            prev.startTime = min(prev.startTime, b.startTime)
-                            prev.endTime = max(prev.endTime, b.endTime)
-                        else:
-                            # If they do not intersect, add the previous booking to events and start a new one
-                            events.append(prev)
-                            prev = b
-
-                    # Add the last booking
-                    events.append(prev)
-                    serialized_events = []
-                    for event in events:
-                        serialized_event = {
-                            'id': event.id,
-                            'startTime': event.startTime.isoformat(),
-                            'endTime': event.endTime.isoformat(),
-                            'courtID': event.court.id,
-                        }
-                        serialized_events.append(serialized_event)
-                    return JsonResponse({'status': 'success', 'events': serialized_events}, status=200)
-                else:
-                    return JsonResponse({'status': 'success'}, status=200)
-            else:
-                return JsonResponse({'status': 'error', 'message': 'Date or venue parameter is missing'}, status=400)
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 
-
-@csrf_exempt
 def createBooking(request):
+    print("Received")
     if request.method == 'POST':
         try:
             events_data = json.loads(request.POST.get('events', '[]'))
+            # Process the events_data as needed
+            print(events_data)  # For debugging purposes
+            
             user = request.user
+            
+            # Create a new Booking instance
             booking = Booking.objects.create(
                 userID=user,
                 price=0.0,
@@ -166,14 +114,16 @@ def createBooking(request):
 
             for event in events_data:
                 resourceID = event['resourceId']
-                court = Court.objects.get(id=resourceID)
+                court = Court.objects.get(id=resourceID[0])
                 start_time = parse_date(event['start'])
                 end_time = parse_date(event['end']) if event['end'] else None
 
+                # Calculate duration and fee for the court
                 duration_hours = (end_time - start_time).total_seconds() / 3600
                 court_fee = duration_hours * float(court.rate)
                 total_fee += court_fee
 
+                # Create BookingCourt instance
                 booking_court = BookingCourt(
                     booking=booking,
                     court=court,
@@ -182,41 +132,20 @@ def createBooking(request):
                 )
                 booking_courts.append(booking_court)
 
+            # Bulk create all BookingCourt instances
             BookingCourt.objects.bulk_create(booking_courts)
+
+            # Update the Booking with total price
             booking.price = total_fee
             booking.save()
 
-            return JsonResponse({'status': 'success', 'event': {
-                'title': 'New Booking',
-                'start': start_time.isoformat(),
-                'end': end_time.isoformat(),
-                'resourceId': resourceID,
-                'color': '#378006',
-                'allDay': False
-            }})
+            return JsonResponse({'status': 'success'})
         except json.JSONDecodeError:
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-    
 
-def fetchEvents(request):
-    if request.method == 'GET':
-        events = []
-        bookings = Booking.objects.all()
-        for booking in bookings:
-            for booking_court in booking.bookingcourt_set.all():
-                events.append({
-                    'title': 'Booking',
-                    'start': booking_court.startTime.isoformat(),
-                    'end': booking_court.endTime.isoformat(),
-                    'resourceId': booking_court.court.id,
-                    'color': '#378006',
-                    'allDay': False
-                })
-        return JsonResponse(events, safe=False)
-    else:
-        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
 
 def createBooking_sameh(request):
     print("Received")
@@ -271,7 +200,6 @@ def createBooking_sameh(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
-#============================================================================
 
 # Admin Related
 def is_admin(user):
@@ -539,6 +467,8 @@ def delete_court(request, court_id):
     court.delete()
     return redirect('admin_courts')
 
+
+
 @login_required
 @user_passes_test(is_admin)
 def update_venue(request, venue_id):
@@ -551,6 +481,8 @@ def update_venue(request, venue_id):
     else:
         form = VenueForm(instance=venue)
     return render(request, 'adminpanel/venue_form.html', {'form': form})
+
+
 
 @login_required
 @user_passes_test(is_admin)
@@ -757,74 +689,3 @@ def my_profile(request):
     else:
         form = UserProfileForm(instance=user)
     return render(request, 'my_profile.html', {'form': form})
-
-
-
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
-def admin_events(request):
-    events = Event.objects.all()
-    return render(request, 'adminpanel/events.html', {'events': events})
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
-def add_event(request):
-    if request.method == 'POST':
-        form = EventForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            return redirect('events')
-    else:
-        form = EventForm()
-    return render(request, 'adminpanel/event_form.html', {'form': form, 'title': 'Add Event'})
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
-def edit_event(request, event_id):
-    event = get_object_or_404(Event, id=event_id)
-    if request.method == 'POST':
-        form = EventForm(request.POST, request.FILES, instance=event)
-        if form.is_valid():
-            form.save()
-            return redirect('events')
-    else:
-        form = EventForm(instance=event)
-    return render(request, 'adminpanel/event_form.html', {'form': form, 'title': 'Edit Event'})
-
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
-def delete_event(request, event_id):
-    event = get_object_or_404(Event, id=event_id)
-    if request.method == 'POST':
-        event.delete()
-        return redirect('events')
-    return render(request, 'adminpanel/confirm_delete.html', {'object': event, 'title': 'Delete Event'})
-
-@login_required
-@user_passes_test(is_admin)
-def toggle_event_show_status(request, event_id):
-    if request.method == 'POST':
-        try:
-            event = get_object_or_404(Event, id=event_id)
-            event.showToggle = not event.showToggle
-            event.save()
-            return JsonResponse({'success': True})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
-@csrf_exempt
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
-def toggle_event_status(request, event_id):
-    try:
-        event = Event.objects.get(id=event_id)
-        event.showToggle = not event.showToggle
-        event.save()
-        return JsonResponse({'success': True})
-    except Event.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Event not found'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})

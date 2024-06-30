@@ -1,6 +1,9 @@
 from django.urls import path
 from django.views.generic.base import RedirectView
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
+
 
 urlpatterns = [
     # Mostly Static Pages
@@ -17,6 +20,7 @@ urlpatterns = [
     path('populate_timeline/', views.populateTimeline, name='populateTimeline'),
     path('select_date/<str:date>/', views.dateSelected, name="dateSelected"),
     path('create_booking/', views.createBooking, name='createBooking'),
+    path('fetch_events/', views.fetchEvents, name='fetchEvents'),
     
     #Admin Panel and Functionality
     path('adminpanel/dashboard/', views.admin_dashboard, name='admin_dashboard'),
@@ -51,10 +55,17 @@ urlpatterns = [
     path('adminpanel/users/update_account_type/<uuid:user_id>/', views.update_user_account_type, name='update_user_account_type'),
 
     path('my_bookings/', views.my_bookings, name='my_bookings'),
+    path('my_bookings/update/<uuid:booking_id>/', views.user_update_booking, name='user_update_booking'),
     path('my_profile/', views.my_profile, name='my_profile'),
 
+    
+    path('adminpanel/events/', views.admin_events, name='events'),
+    path('adminpanel/events/add/', views.add_event, name='add_event'),
+    path('adminpanel/events/edit/<int:event_id>/', views.edit_event, name='edit_event'),
+    path('adminpanel/events/delete/<int:event_id>/', views.delete_event, name='delete_event'),
+    path('adminpanel/events/toggle_show_status/<int:event_id>/', views.toggle_event_show_status, name='toggle_event_show_status'),
 
 
 
+] 
 
-]

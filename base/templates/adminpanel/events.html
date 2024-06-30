@@ -1,0 +1,84 @@
+{% extends "adminpanel/base_admin.html" %}
+{% load static %}
+{% block title %}
+    <title>Events</title>
+{% endblock %}
+
+{% block content %}
+    <h1>Events</h1>
+    <a href="{% url 'add_event' %}" class="btn btn-primary mb-3">Add New Event</a>
+    <table id="eventsTable" class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Event Name</th>
+                <th>Image</th>
+                <th>Description</th>
+                <th>Show Toggle</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in events %}
+            <tr>
+                <td>{{ event.eventName }}</td>
+                <td><img src="{{ event.imgRef.url }}" alt="{{ event.eventName }}" style="width: 50px; height: auto;"></td>
+                <td>{{ event.eventDescription }}</td>
+                <td>
+                    <input type="checkbox" data-toggle="toggle" data-on="Active" data-off="Inactive" data-onstyle="success" data-offstyle="danger" onchange="toggleEventStatus('{{ event.id }}')" {% if event.showToggle %}checked{% endif %}>
+                </td>
+                <td>
+                    <a href="{% url 'edit_event' event.id %}" class="btn btn-primary btn-sm">Edit</a>
+                    <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ event.id }}')">Delete</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block js %}
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+<script>
+    $(document).ready(function() {
+        $('#eventsTable').DataTable();
+        $('input[data-toggle="toggle"]').bootstrapToggle();
+    });
+
+    function toggleEventStatus(eventId) {
+        $.ajax({
+            url: "{% url 'toggle_event_show_status' 0 %}".replace('0', eventId),
+            type: "POST",
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (!response.success) {
+                    Swal.fire('Error', response.error, 'error');
+                }
+            }
+        });
+    }
+
+    function confirmDelete(eventId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = "{% url 'delete_event' 0 %}".replace('0', eventId);
+            }
+        });
+    }
+</script>
+{% endblock %}

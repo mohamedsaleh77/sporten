@@ -2,16 +2,45 @@
 
 {% block title %}
     <title>Admin Dashboard</title>
+    <style>
+        .fixed-height-card {
+            height: 300px; /* Set a fixed height for all cards */
+        }
+
+        .fixed-height-card .card-body {
+            height: calc(100% - 56px); /* Adjust the height to exclude the card-header */
+        }
+
+        .fixed-height-card .card-body canvas {
+            height: 100% !important;
+            width: 100% !important;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-5">
     <h1>Admin Dashboard</h1>
 
+    <div class="row mb-4">
+        <div class="col-md-9">
+            <form id="reportForm" class="form-inline" method="get">
+                <label class="sr-only" for="startDate">Start Date</label>
+                <input type="date" class="form-control mb-2 mr-sm-2" id="startDate" name="start_date" value="{{ start_date }}" placeholder="Start Date" required>
+                <label class="sr-only" for="endDate">End Date</label>
+                <input type="date" class="form-control mb-2 mr-sm-2" id="endDate" name="end_date" value="{{ end_date }}" placeholder="End Date" required>
+                <button type="submit" class="btn btn-primary mb-2">Generate Report</button>
+            </form>
+        </div>
+        <div class="col-md-3 d-flex justify-content-end">
+            <button id="exportButton" class="btn btn-success mt-2">Export Dashboard</button>
+        </div>
+    </div>
+
     <div class="row">
         <!-- User Statistics -->
         <div class="col-md-4">
-            <div class="card">
+            <div class="card fixed-height-card">
                 <div class="card-header">
                     User Statistics
                 </div>
@@ -23,7 +52,7 @@
 
         <!-- Booking Statistics -->
         <div class="col-md-4">
-            <div class="card">
+            <div class="card fixed-height-card">
                 <div class="card-header">
                     Booking Statistics
                 </div>
@@ -35,7 +64,7 @@
 
         <!-- Financial Metrics -->
         <div class="col-md-4">
-            <div class="card">
+            <div class="card fixed-height-card">
                 <div class="card-header">
                     Financial Metrics
                 </div>
@@ -84,153 +113,197 @@
 {% block js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.4/jspdf.debug.js"></script>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // User Statistics Chart
-        const userStatisticsCtx = document.getElementById('userStatisticsChart').getContext('2d');
-        const userStatisticsChart = new Chart(userStatisticsCtx, {
-            type: 'pie',
-            data: {
-                labels: ['Total Users', 'New Users (Last Week)', 'Active Users'],
-                datasets: [{
-                    label: 'User Statistics',
-                    data: [{{ total_users }}, {{ new_users_last_week }}, {{ active_users }}],
-                    backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56'],
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    datalabels: {
-                        color: 'white',
-                        formatter: function(value, context) {
-                            return value;
-                        }
-                    }
-                }
-            }
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default date values for the current month if not already set
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
 
-        // Booking Status Distribution Chart
-        const bookingStatisticsCtx = document.getElementById('bookingStatisticsChart').getContext('2d');
-        const bookingStatusData = JSON.parse(document.getElementById('bookingStatusData').textContent);
-        const bookingStatisticsChart = new Chart(bookingStatisticsCtx, {
-            type: 'bar',
-            data: {
-                labels: bookingStatusData.map(status => status.status),
-                datasets: [{
-                    label: 'Booking Status Distribution',
-                    data: bookingStatusData.map(status => status.count),
-                    backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56'],
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    datalabels: {
-                        color: 'black',
-                        anchor: 'end',
-                        align: 'top',
-                        formatter: function(value, context) {
-                            return value;
-                        }
-                    }
-                }
-            }
-        });
+    if (!startDateInput.value || !endDateInput.value) {
+        const currentDate = new Date();
+        const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString().split('T')[0];
+        const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
 
-        // Financial Metrics Chart
-        const financialMetricsCtx = document.getElementById('financialMetricsChart').getContext('2d');
-        const financialMetricsChart = new Chart(financialMetricsCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Total Revenue', 'Revenue (Last Week)', 'Average Booking Price'],
-                datasets: [{
-                    label: 'Financial Metrics',
-                    data: [{{ total_revenue }}, {{ revenue_last_week }}, {{ average_booking_price }}],
-                    backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56'],
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    datalabels: {
-                        color: 'white',
-                        formatter: function(value, context) {
-                            return value;
-                        }
-                    }
-                }
-            }
-        });
+        startDateInput.value = firstDayOfMonth;
+        endDateInput.value = lastDayOfMonth;
+    }
 
-        // Court Usage Chart
-        const courtUsageCtx = document.getElementById('courtUsageChart').getContext('2d');
-        const bookingHoursPerCourtData = JSON.parse(document.getElementById('bookingHoursPerCourtData').textContent);
-        const courtUsageLabels = Object.keys(bookingHoursPerCourtData);
-        const courtUsageData = Object.values(bookingHoursPerCourtData);
-        const courtUsageChart = new Chart(courtUsageCtx, {
-            type: 'bar',
-            data: {
-                labels: courtUsageLabels,
-                datasets: [{
-                    label: 'Booking Hours per Court',
-                    data: courtUsageData,
-                    backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56'],
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                plugins: {
-                    datalabels: {
-                        color: 'black',
-                        anchor: 'end',
-                        align: 'right',
-                        formatter: function(value, context) {
-                            return value;
-                        }
+    // User Statistics Chart
+    const userStatisticsCtx = document.getElementById('userStatisticsChart').getContext('2d');
+    const userStatisticsChart = new Chart(userStatisticsCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Total Users', 'New Users (Last Week)', 'Active Users'],
+            datasets: [{
+                label: 'User Statistics',
+                data: [{{ total_users }}, {{ new_users_last_week }}, {{ active_users }}],
+                backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56'],
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                datalabels: {
+                    color: 'white',
+                    display: true,
+                    formatter: function(value, context) {
+                        return value;
                     }
                 }
             }
-        });
+        }
+    });
 
-        // Peak Booking Times Chart
-        const peakBookingTimesCtx = document.getElementById('peakBookingTimesChart').getContext('2d');
-        const peakBookingTimesData = JSON.parse(document.getElementById('peakBookingTimesData').textContent);
-        const peakBookingTimesLabels = Object.keys(peakBookingTimesData);
-        const peakBookingTimesValues = Object.values(peakBookingTimesData);
-        const peakBookingTimesChart = new Chart(peakBookingTimesCtx, {
-            type: 'line',
-            data: {
-                labels: peakBookingTimesLabels.map(hour => `${hour}:00`),
-                datasets: [{
-                    label: 'Peak Booking Times',
-                    data: peakBookingTimesValues,
-                    backgroundColor: '#ff6384',
-                    borderColor: '#ff6384',
-                    fill: false,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    datalabels: {
-                        color: 'black',
-                        anchor: 'end',
-                        align: 'top',
-                        formatter: function(value, context) {
-                            return value;
-                        }
+    // Booking Status Distribution Chart
+    const bookingStatisticsCtx = document.getElementById('bookingStatisticsChart').getContext('2d');
+    const bookingStatusData = JSON.parse(document.getElementById('bookingStatusData').textContent);
+    const bookingStatisticsChart = new Chart(bookingStatisticsCtx, {
+        type: 'bar',
+        data: {
+            labels: bookingStatusData.map(status => status.status),
+            datasets: [{
+                label: 'Booking Status Distribution',
+                data: bookingStatusData.map(status => status.count),
+                backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56'],
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                datalabels: {
+                    color: 'black',
+                    anchor: 'end',
+                    align: 'top',
+                    display: true,
+                    formatter: function(value, context) {
+                        return value;
                     }
                 }
             }
+        }
+    });
+
+    // Financial Metrics Chart
+    const financialMetricsCtx = document.getElementById('financialMetricsChart').getContext('2d');
+    const financialMetricsChart = new Chart(financialMetricsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Total Revenue', 'Revenue (Last Week)', 'Average Booking Price'],
+            datasets: [{
+                label: 'Financial Metrics',
+                data: [{{ total_revenue }}, {{ revenue_last_week }}, {{ average_booking_price }}],
+                backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56'],
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                datalabels: {
+                    color: 'white',
+                    display: true,
+                    formatter: function(value, context) {
+                        return value;
+                    }
+                }
+            }
+        }
+    });
+
+    // Court Usage Chart
+    const courtUsageCtx = document.getElementById('courtUsageChart').getContext('2d');
+    const bookingHoursPerCourtData = JSON.parse(document.getElementById('bookingHoursPerCourtData').textContent);
+    const courtUsageLabels = Object.keys(bookingHoursPerCourtData);
+    const courtUsageData = Object.values(bookingHoursPerCourtData);
+    const courtUsageChart = new Chart(courtUsageCtx, {
+        type: 'bar',
+        data: {
+            labels: courtUsageLabels,
+            datasets: [{
+                label: 'Booking Hours per Court',
+                data: courtUsageData,
+                backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56'],
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                datalabels: {
+                    color: 'black',
+                    anchor: 'end',
+                    align: 'right',
+                    display: true,
+                    formatter: function(value, context) {
+                        return value;
+                    }
+                }
+            }
+        }
+    });
+
+    // Peak Booking Times Chart
+    const peakBookingTimesCtx = document.getElementById('peakBookingTimesChart').getContext('2d');
+    const peakBookingTimesData = JSON.parse(document.getElementById('peakBookingTimesData').textContent);
+    const peakBookingTimesLabels = Object.keys(peakBookingTimesData);
+    const peakBookingTimesValues = Object.values(peakBookingTimesData);
+    const peakBookingTimesChart = new Chart(peakBookingTimesCtx, {
+        type: 'line',
+        data: {
+            labels: peakBookingTimesLabels.map(hour => `${hour}:00`),
+            datasets: [{
+                label: 'Peak Booking Times',
+                data: peakBookingTimesValues,
+                backgroundColor: '#ff6384',
+                borderColor: '#ff6384',
+                fill: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                datalabels: {
+                    color: 'black',
+                    anchor: 'end',
+                    align: 'top',
+                    display: true,
+                    formatter: function(value, context) {
+                        return value;
+                    }
+                }
+            }
+        }
+    });
+
+    // Export Dashboard to PDF
+    document.getElementById('exportButton').addEventListener('click', function() {
+        html2canvas(document.querySelector('.container')).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.width;
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save('dashboard.pdf');
         });
     });
+
+    // Handle Report Generation
+    document.getElementById('reportForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+
+        // Implement the logic to filter and update the charts based on the selected date range
+        // You can use AJAX to fetch the data for the specified date range and update the charts accordingly
+        window.location.href = `?start_date=${startDate}&end_date=${endDate}`;
+    });
+});
 </script>
 {% endblock %}
