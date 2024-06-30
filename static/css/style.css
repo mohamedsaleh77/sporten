@@ -1,0 +1,14 @@
+.carousel {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.carousel-inner {
+    height: 25vh; /* 25% of the viewport height */
+}
+
+.carousel-item img {
+    object-fit: cover;
+    height: 100%;
+}

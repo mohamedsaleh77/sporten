@@ -55,7 +55,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Venue(models.Model):
     venueName = models.CharField(max_length=255)
     bookingToggle = models.BooleanField()
-    
+    image = models.ImageField(upload_to='venues/', blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+
     def __str__(self):
         return self.venueName
 
@@ -112,6 +114,11 @@ class Event(models.Model):
     imgRef = models.ImageField(upload_to='images/')
     eventDescription = models.TextField()
     showToggle = models.BooleanField()
+
+class BannerImage(models.Model):
+    image = models.ImageField(upload_to='banners/')
+    description = models.CharField(max_length=255, blank=True, null=True)
+
     
     def __str__(self):
         return self.eventName

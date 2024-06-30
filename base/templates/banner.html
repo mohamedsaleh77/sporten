@@ -1,55 +1,27 @@
-{% load static %}
-
-<div id="app" class="relative w-full overflow-hidden">
-  <div class="flex transition-transform duration-700" :style="{ transform: `translateX(-${currentSlide * 100}%)` }">
-    <!-- Slide 1 -->
-    <div class="min-w-full h-96 flex items-center justify-center text-white">
-      <img src="{% static 'images/banner_test.png' %}" alt="Banner 1" class="absolute inset-0 w-full h-full object-fill">
-    </div>
-    <!-- Slide 2 -->
-    <div class="min-w-full h-64 bg-red-500 flex items-center justify-center text-white">
-      Slide 2
-    </div>
-    <!-- Slide 3 -->
-    <div class="min-w-full h-64 bg-green-500 flex items-center justify-center text-white">
-      Slide 3
-    </div>
+<div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
+  <ol class="carousel-indicators">
+      {% for banner in banners %}
+      <li data-target="#carouselExampleIndicators" data-slide-to="{{ forloop.counter0 }}" class="{% if forloop.first %}active{% endif %}"></li>
+      {% endfor %}
+  </ol>
+  <div class="carousel-inner">
+      {% for banner in banners %}
+      <div class="carousel-item {% if forloop.first %}active{% endif %}">
+          <img class="d-block w-100" src="{{ banner.image.url }}" alt="{{ banner.description }}">
+          {% if banner.description %}
+          <div class="carousel-caption d-none d-md-block">
+              <p>{{ banner.description }}</p>
+          </div>
+          {% endif %}
+      </div>
+      {% endfor %}
   </div>
-
-  <!-- Navigation Buttons -->
-  <button @click="prevSlide" class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full">
-    &larr;
-  </button>
-  <button @click="nextSlide" class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-gray-800 text-white p-2 rounded-full">
-    &rarr;
-  </button>
+  <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="sr-only">Previous</span>
+  </a>
+  <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="sr-only">Next</span>
+  </a>
 </div>
-
-<script>
-  const { createApp } = Vue;
-
-  createApp({
-    data() {
-      return {
-        currentSlide: 0,
-        totalSlides: 3,
-      };
-    },
-    mounted() {
-      //this.startAutoSlide();
-    },
-    methods: {
-      startAutoSlide() {
-        setInterval(() => {
-          this.nextSlide();
-        }, 3000);
-      },
-      nextSlide() {
-        this.currentSlide = (this.currentSlide + 1) % this.totalSlides;
-      },
-      prevSlide() {
-        this.currentSlide = (this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
-      }
-    }
-  }).mount('#app');
-</script>
