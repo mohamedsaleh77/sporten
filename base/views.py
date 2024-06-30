@@ -23,6 +23,7 @@ from django.utils.timezone import now
 from dateutil.parser import parse as parse_date
 from django.views.decorators.csrf import csrf_exempt
 
+from django.forms.models import model_to_dict
 
 # Mostly Static Pages
 # def load_home(request):
@@ -34,6 +35,11 @@ def load_home(request):
 
 def about(request):
     return render(request, 'about.html')
+
+def history(request):
+    return render(request, 'history.html')
+
+#============================================================================
 
 # Login, Logout & Register
 def loginPage(request):
@@ -74,17 +80,21 @@ def logoutPage(request):
     logout(request)
     return redirect('load_home')
 
+#============================================================================
+
+# Booking Related
 @login_required
 def bookingPage(request, pk):
     venueGet = Venue.objects.get(id=pk)
-    courtsGet = Court.objects.filter(venueID=venueGet)
+    courtsGet = Court.objects.filter(venueID=venueGet, bookingToggle=True)
     courts = list(courtsGet.values())
     holidaysGet = Holiday.objects.filter(venueID=venueGet)
     holidays = list(holidaysGet.values())
-    context = {'courts': courts, "venue": venueGet, "holidays": holidays}
+    venue_dict = model_to_dict(venueGet)
+    context = {'courts': courts, "venue": venue_dict, "holidays": holidays}
+    print(context)
     return render(request, 'booking.html', context)
 
-# Booking Related
 def dateSelected(request, date):
     date_obj = datetime.strptime(date, "%Y-%m-%d").date()
     bookings = BookingCourt.objects.filter(startTime__date=date_obj)
@@ -94,6 +104,46 @@ def dateSelected(request, date):
     return JsonResponse({'bookings': booking_data})
 
 
+def populateTimeline(request):
+    if request.method == 'GET':
+        try:
+            date = request.GET.get('date')
+            venue = request.GET.get('venue')
+            if date and venue:
+                courts = list(Court.objects.filter(venueID=venue))
+                bookings = BookingCourt.objects.filter(startTime__date=date, court__in=courts, booking__status__in=['PENDING', 'COMPLETED']).order_by('court', 'startTime')
+                events = []
+                if bookings:
+                    # Initialize the first booking
+                    prev = bookings[0]
+
+                    for b in bookings[1:]:
+                        if b.court == prev.court and b.startTime <= prev.endTime:
+                            # Merge the bookings if they intersect
+                            prev.startTime = min(prev.startTime, b.startTime)
+                            prev.endTime = max(prev.endTime, b.endTime)
+                        else:
+                            # If they do not intersect, add the previous booking to events and start a new one
+                            events.append(prev)
+                            prev = b
+
+                    # Add the last booking
+                    events.append(prev)
+                    serialized_events = []
+                    for event in events:
+                        serialized_event = {
+                            'id': event.id,
+                            'startTime': event.startTime.isoformat(),
+                            'endTime': event.endTime.isoformat(),
+                            'courtID': event.court.id,
+                        }
+                        serialized_events.append(serialized_event)
+                return JsonResponse({'status': 'success', 'events': serialized_events}, status=200)
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Date or venue parameter is missing'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 
 
@@ -146,6 +196,7 @@ def createBooking(request):
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+    
 
 def fetchEvents(request):
     if request.method == 'GET':
@@ -218,6 +269,7 @@ def createBooking_sameh(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
+#============================================================================
 
 # Admin Related
 def is_admin(user):
@@ -485,8 +537,6 @@ def delete_court(request, court_id):
     court.delete()
     return redirect('admin_courts')
 
-
-
 @login_required
 @user_passes_test(is_admin)
 def update_venue(request, venue_id):
@@ -499,8 +549,6 @@ def update_venue(request, venue_id):
     else:
         form = VenueForm(instance=venue)
     return render(request, 'adminpanel/venue_form.html', {'form': form})
-
-
 
 @login_required
 @user_passes_test(is_admin)

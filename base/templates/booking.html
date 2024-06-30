@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block css %}
+
     <style>
         #calendar {
             max-width: 100%;
@@ -23,7 +24,10 @@
 {% block content %}
     {{ courts|json_script:"courts"|safe }}
     {{ holidays|json_script:"holidays"|safe }}
-    <div id='calendar'></div>
+    {{ venue|json_script:"venue"|safe }}
+
+    <div id="calendar"></div>
+
 {% endblock content %}
 
 {% block js %}

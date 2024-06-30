@@ -9,6 +9,7 @@ urlpatterns = [
     # Mostly Static Pages
     path('', views.load_home, name='load_home'),
     path('about/', views.about, name='about'),
+    path("history/", views.history, name="history"),
     
     # Login & Logout
     path('login/', views.loginPage, name='loginPage'),
@@ -16,6 +17,7 @@ urlpatterns = [
     
     # Booking and Calendar Handling
     path('booking/<int:pk>/', views.bookingPage, name='booking'),
+    path('populate_timeline/', views.populateTimeline, name='populateTimeline'),
     path('select_date/<str:date>/', views.dateSelected, name="dateSelected"),
     path('create_booking/', views.createBooking, name='createBooking'),
     path('fetch_events/', views.fetchEvents, name='fetchEvents'),
