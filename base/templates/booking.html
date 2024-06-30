@@ -16,11 +16,22 @@
             border-radius: 5px;
             background-color: #f9f9f9;
         }
+        #cart-events {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .cart-event-item {
+            border-bottom: 1px solid #ccc; /* Add a bottom border to each list item */
+            padding: 10px; /* Add some padding to make the list item more readable */
+          }
+          
     </style>
 {% endblock css %}
 
 {% block headerjs %}
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.13/index.global.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
 {% endblock headerjs %}
 
 {% block content %}
@@ -242,7 +253,11 @@
     function addEventToCart(event) {
         const cartEventsList = document.getElementById('cart-events');
         const listItem = document.createElement('li');
-        listItem.textContent = `Court: ${event.resourceId}, Start: ${event.start}, End: ${event.end}`;
+        listItem.className = 'cart-event-item';
+        const startDate = moment(event.start);
+        const endDate = moment(event.end);
+        const courtName = calendar.getResourceById(event.resourceId).title
+        listItem.textContent = `Court: ${courtName}, Date: ${startDate.format('YYYY-MM-DD')}, Start: ${startDate.utcOffset(0).format('HH:mm')}, End: ${endDate.utcOffset(0).format('HH:mm')}`;
         cartEventsList.appendChild(listItem);
     }
 
@@ -284,6 +299,7 @@
                     console.log('Booking created successfully');
                     tempEvents.forEach(event => event.remove());
                     document.getElementById('cart-events').innerHTML = '';
+                    window.location.href = '/my_bookings/';
                 } else {
                     console.error('Error creating booking:', data.message);
                 }

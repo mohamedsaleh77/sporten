@@ -372,11 +372,12 @@ def admin_bookings(request):
 @user_passes_test(is_admin)
 def create_booking(request):
     if request.method == 'POST':
+        print("Request POST data:", request.POST)  # Log POST data
         booking_data = json.loads(request.POST.get('events'))
         booking_form_data = {
-            'user': request.user.id,  # Assuming you want to link the booking to the logged-in admin
-            'bookTime': booking_data[0]['start'],
-            'price': 100  # You can replace this with the actual price logic
+            'userID': request.user.id,  # Assuming you want to link the booking to the logged-in admin
+            'price': 100,  # You can replace this with the actual price logic
+            'status': 'Pending'  # Assuming you have a status field in the BookingForm
         }
         booking_form = BookingForm(booking_form_data)
         
@@ -402,8 +403,10 @@ def create_booking(request):
             }
 
             return JsonResponse(response_data)
-
-        return JsonResponse({'error': 'Invalid form data'}, status=400)
+        else:
+            print("Booking form errors:", booking_form.errors)  # Log booking form errors
+            print("Booking court form errors:", booking_court_form.errors)  # Log booking court form errors
+            return JsonResponse({'error': 'Invalid form data'}, status=400)
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=400)
 
