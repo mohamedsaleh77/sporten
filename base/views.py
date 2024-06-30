@@ -130,7 +130,9 @@ def populateTimeline(request):
                             'courtID': event.court.id,
                         }
                         serialized_events.append(serialized_event)
-                return JsonResponse({'status': 'success', 'events': serialized_events}, status=200)
+                    return JsonResponse({'status': 'success', 'events': serialized_events}, status=200)
+                else:
+                    return JsonResponse({'status': 'success'}, status=200)
             else:
                 return JsonResponse({'status': 'error', 'message': 'Date or venue parameter is missing'}, status=400)
         except Exception as e:
