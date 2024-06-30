@@ -546,3 +546,22 @@ def admin_dashboard(request):
     }
 
     return render(request, 'adminpanel/dashboard.html', context)
+
+
+# User Pages
+@login_required
+def my_bookings(request):
+    bookings = Booking.objects.filter(userID=request.user)
+    return render(request, 'my_bookings.html', {'bookings': bookings})
+
+@login_required
+def my_profile(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully')
+            return redirect('my_profile')
+    else:
+        form = CustomUserCreationForm(instance=request.user)
+    return render(request, 'my_profile.html', {'form': form})

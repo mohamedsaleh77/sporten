@@ -21,15 +21,86 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-
-    <!-- {% block title %} SPORTEN {% endblock title %} -->
+    {% block title %} SPORTEN {% endblock title %}
 
     {% block headerjs %}
     {% endblock headerjs %}
 
     {% block css %}
+    <style>
+        /* Navbar styling */
+        .navbar {
+            background-color: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+    
+        .navbar-brand img {
+            height: 50px;
+        }
+    
+        .nav-link {
+            color: black;
+            font-weight: 500;
+        }
+    
+        .nav-link:hover {
+            color: #0056b3;
+        }
+    
+        /* Dropdown styling */
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            z-index: 1000;
+            display: none;
+            float: left;
+            min-width: 10rem;
+            padding: 0.5rem 0;
+            margin: 0.125rem 0 0;
+            font-size: 1rem;
+            color: #212529;
+            text-align: left;
+            list-style: none;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 0.25rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175);
+            transition: all 0.3s ease-in-out;
+        }
+    
+        .dropdown-menu.show {
+            display: block;
+            opacity: 1;
+            visibility: visible;
+        }
+    
+        .dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 0.25rem 1.5rem;
+            clear: both;
+            font-weight: 400;
+            color: #212529;
+            text-align: inherit;
+            white-space: nowrap;
+            background-color: transparent;
+            border: 0;
+        }
+    
+        .dropdown-item:hover,
+        .dropdown-item:focus {
+            color: #0056b3;
+            text-decoration: none;
+            background-color: #f8f9fa;
+        }
+    </style>
     {% endblock css %}
-
 </head>
 <body>
 

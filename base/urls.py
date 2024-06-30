@@ -48,6 +48,8 @@ urlpatterns = [
     path('adminpanel/users/delete/<uuid:user_id>/', views.delete_user, name='delete_user'),
     path('adminpanel/users/update_account_type/<uuid:user_id>/', views.update_user_account_type, name='update_user_account_type'),
 
+    path('my_bookings/', views.my_bookings, name='my_bookings'),
+    path('my_profile/', views.my_profile, name='my_profile'),
 
 
 

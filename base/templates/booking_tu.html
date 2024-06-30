@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Calendar</title>
+    <!-- Tui Calendar CSS -->
+    <link rel="stylesheet" href="https://uicdn.toast.com/tui-calendar/latest/tui-calendar.min.css">
+    <link rel="stylesheet" href="https://uicdn.toast.com/tui-date-picker/latest/tui-date-picker.css">
+    <link rel="stylesheet" href="https://uicdn.toast.com/tui-time-picker/latest/tui-time-picker.css">
+    <style>
+        #calendar {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 10px;
+            height: 800px;
+        }
+    </style>
+</head>
+<body>
+    <div id="calendar"></div>
+
+    <!-- Tui Calendar JS Dependencies -->
+    <script src="https://uicdn.toast.com/tui-code-snippet/latest/tui-code-snippet.min.js"></script>
+    <script src="https://uicdn.toast.com/tui-time-picker/latest/tui-time-picker.min.js"></script>
+    <script src="https://uicdn.toast.com/tui-date-picker/latest/tui-date-picker.min.js"></script>
+    <script src="https://uicdn.toast.com/tui-calendar/latest/tui-calendar.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize TuiCalendar
+            var Calendar = tui.Calendar;
+
+            var calendar = new Calendar('#calendar', {
+                defaultView: 'month',
+                taskView: true,
+                scheduleView: true,
+                useCreationPopup: true,
+                useDetailPopup: true,
+                calendars: [
+                    {
+                        id: '1',
+                        name: 'My Calendar',
+                        color: '#ffffff',
+                        bgColor: '#9e5fff',
+                        dragBgColor: '#9e5fff',
+                        borderColor: '#9e5fff'
+                    }
+                ]
+            });
+
+            window.addEventListener('resize', function() {
+                calendar.render();
+            });
+
+            var schedules = [
+                {
+                    id: '1',
+                    calendarId: '1',
+                    title: 'Meeting',
+                    category: 'time',
+                    dueDateClass: '',
+                    start: '2024-06-29T22:30:00+09:00',
+                    end: '2024-06-30T02:30:00+09:00'
+                }
+            ];
+
+            calendar.createSchedules(schedules);
+
+            calendar.on('beforeCreateSchedule', function(event) {
+                var schedule = {
+                    id: String(Math.random()),
+                    calendarId: event.calendarId,
+                    title: event.title,
+                    isAllDay: event.isAllDay,
+                    start: event.start,
+                    end: event.end,
+                    category: event.isAllDay ? 'allday' : 'time',
+                    dueDateClass: '',
+                    location: event.location,
+                    raw: {
+                        class: event.raw['class']
+                    },
+                    state: event.state
+                };
+
+                calendar.createSchedules([schedule]);
+                createBooking(schedule);
+            });
+
+            calendar.on('beforeUpdateSchedule', function(event) {
+                var schedule = event.schedule;
+                var changes = event.changes;
+
+                calendar.updateSchedule(schedule.id, schedule.calendarId, changes);
+            });
+
+            calendar.on('beforeDeleteSchedule', function(event) {
+                var schedule = event.schedule;
+
+                calendar.deleteSchedule(schedule.id, schedule.calendarId);
+            });
+
+            function createBooking(schedule) {
+                const csrfToken = '{{ csrf_token }}';
+                const bookings = new FormData();
+                bookings.append('csrfmiddlewaretoken', csrfToken);
+
+                const serializedEvent = {
+                    title: schedule.title,
+                    start: schedule.start.toISOString(),
+                    end: schedule.end ? schedule.end.toISOString() : null,
+                    resourceId: schedule.calendarId,
+                    color: schedule.bgColor,
+                    allDay: schedule.isAllDay
+                };
+
+                bookings.append('events', JSON.stringify([serializedEvent]));
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/create_booking/', true);
+                xhr.send(bookings);
+                console.log("Booking created:", serializedEvent);
+            }
+        });
+    </script>
+</body>
+</html>
