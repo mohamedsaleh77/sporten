@@ -91,7 +91,9 @@ def bookingPage(request, pk):
     holidaysGet = Holiday.objects.filter(venueID=venueGet)
     holidays = list(holidaysGet.values())
     venue_dict = model_to_dict(venueGet)
-    context = {'courts': courts, "venue": venue_dict, "holidays": holidays}
+    # Retrieve session events
+    session_events = request.session.get('session_events', [])
+    context = {'courts': courts, "venue": venue_dict, "holidays": holidays, 'session_events': json.dumps(session_events),}
     print(context)
     return render(request, 'booking.html', context)
 
@@ -149,10 +151,78 @@ def populateTimeline(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 
+@login_required
+def storeTempEvent(request):
+    if request.method == 'POST':
+        try:
+            temp_event = json.loads(request.body.decode('utf-8'))
+            if 'temp_events' not in request.session:
+                request.session['temp_events'] = []
+            request.session['temp_events'].append(temp_event)
+            request.session.modified = True
+            return JsonResponse({'status': 'success'}, status=200)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 @csrf_exempt
 @login_required
 def createBooking(request):
+    if request.method == 'POST':
+        try:
+            temp_events = request.session.get('temp_events', [])
+            user = request.user
+            booking = Booking.objects.create(
+                userID=user,
+                price=0.0,
+                status='PENDING'
+            )
+
+            booking_courts = []
+            total_fee = 0
+
+            for event in temp_events:
+                resourceID = event['resourceId']
+                court = Court.objects.get(id=resourceID)
+                start_time = parse_date(event['start'])
+                end_time = parse_date(event['end']) if event['end'] else None
+
+                duration_hours = (end_time - start_time).total_seconds() / 3600
+                court_fee = duration_hours * float(court.rate)
+                total_fee += court_fee
+
+                booking_court = BookingCourt(
+                    booking=booking,
+                    court=court,
+                    startTime=start_time,
+                    endTime=end_time
+                )
+                booking_courts.append(booking_court)
+
+            BookingCourt.objects.bulk_create(booking_courts)
+            booking.price = total_fee
+            booking.save()
+
+            # Clear the temporary events from the session after saving
+            request.session['temp_events'] = []
+            request.session.modified = True
+
+            return JsonResponse({'status': 'success', 'event': {
+                'title': 'New Booking',
+                'start': start_time.isoformat(),
+                'end': end_time.isoformat(),
+                'resourceId': resourceID,
+                'color': '#378006',
+                'allDay': False
+            }})
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+    
+def createBooking_old(request):
     if request.method == 'POST':
         try:
             events_data = json.loads(request.POST.get('events', '[]'))
@@ -201,7 +271,6 @@ def createBooking(request):
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
     
-
 # def fetchEvents(request):
 #     if request.method == 'GET':
 #         events = []
@@ -235,7 +304,7 @@ def admin_dashboard(request):
 @login_required
 @user_passes_test(is_admin)
 def admin_bookings(request):
-    bookings = BookingCourt.objects.select_related('booking__userID', 'court__venueID').all()
+    bookings = BookingCourt.objects.select_related('booking__userID', 'court__venueID').all().order_by("-booking__bookTime")
     return render(request, 'adminpanel/bookings.html', {'bookings': bookings})
 
 

@@ -20,6 +20,7 @@ urlpatterns = [
     path('populate_timeline/', views.populateTimeline, name='populateTimeline'),
     path('select_date/<str:date>/', views.dateSelected, name="dateSelected"),
     path('create_booking/', views.createBooking, name='createBooking'),
+    path('store_temp_event/', views.storeTempEvent, name='store_temp_event'),
     #path('fetch_events/', views.fetchEvents, name='fetchEvents'),
     
     #Admin Panel and Functionality
