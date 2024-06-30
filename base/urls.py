@@ -31,13 +31,15 @@ urlpatterns = [
     path('adminpanel/', RedirectView.as_view(url='/adminpanel/dashboard/', permanent=False), name='adminpanel_redirect'),
     path('adminpanel/toggle_user_active_status/<str:user_id>/', views.toggle_user_active_status, name='toggle_user_active_status'),
     path('adminpanel/courts/', views.admin_courts, name='admin_courts'),
-    path('adminpanel/venues/', views.admin_venues, name='admin_venues'),
     path('adminpanel/courts/create/', views.create_court, name='create_court'),
+    
+    path('adminpanel/venues/', views.admin_venues, name='admin_venues'),
     path('adminpanel/venues/create/', views.create_venue, name='create_venue'),
-    path('adminpanel/courts/update/<int:court_id>/', views.update_court, name='update_court'),
     path('adminpanel/venues/update/<int:venue_id>/', views.update_venue, name='update_venue'),
-    path('adminpanel/courts/delete/<int:court_id>/', views.delete_court, name='delete_court'),
     path('adminpanel/venues/delete/<int:venue_id>/', views.delete_venue, name='delete_venue'), 
+
+    path('adminpanel/courts/update/<int:court_id>/', views.update_court, name='update_court'),
+    path('adminpanel/courts/delete/<int:court_id>/', views.delete_court, name='delete_court'),
     path('adminpanel/bookings/', views.admin_bookings, name='admin_bookings'),
     path('adminpanel/bookings/create/', views.create_booking, name='create_booking'),
     path('adminpanel/bookings/update/<uuid:booking_id>/', views.update_booking, name='update_booking'),
@@ -64,6 +66,12 @@ urlpatterns = [
     path('adminpanel/events/edit/<int:event_id>/', views.edit_event, name='edit_event'),
     path('adminpanel/events/delete/<int:event_id>/', views.delete_event, name='delete_event'),
     path('adminpanel/events/toggle_show_status/<int:event_id>/', views.toggle_event_show_status, name='toggle_event_show_status'),
+
+    path('adminpanel/banners/', views.admin_banners, name='admin_banners'),
+    path('adminpanel/banners/add/', views.add_banner, name='add_banner'),
+    path('adminpanel/banners/edit/<int:banner_id>/', views.edit_banner, name='edit_banner'),
+    path('adminpanel/banners/delete/<int:banner_id>/', views.delete_banner, name='delete_banner'),
+ 
 
 
 
