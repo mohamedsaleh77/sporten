@@ -32,9 +32,6 @@
 
 {% block js %}
 <script>
-    let calendar;
-    let calendarEl;
-
     document.addEventListener('DOMContentLoaded', function() {
         loadCalendar();
         window.addEventListener('resize', function() {
@@ -57,19 +54,27 @@
         calendarEl = document.getElementById('calendar');
         calendar = new FullCalendar.Calendar(calendarEl, {
             schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
-            initialView: 'dayGridMonth', 
-            timeZone: 'UTC',
+            initialView: 'dayGridMonth',
             selectable: true,
-            selectOverlap: false,
-            aspectRatio: 1.35,
             dateClick: function(info) {
-                var selectedDate = info.dateStr;
-                handleDateSelected(selectedDate);
+                var today = new Date().setHours(0, 0, 0, 0);
+                var selectedDate = new Date(info.dateStr).setHours(0, 0, 0, 0);
+                if (selectedDate >= today) {
+                    handleDateSelected(info);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Cannot select past dates.'
+                    });
+                }
             },
             selectAllow: function(info) {
-                var selectedDateStr = info.startStr;
-                return !holidayDates.includes(selectedDateStr);
+                var today = new Date().setHours(0, 0, 0, 0);
+                var selectedDate = new Date(info.startStr).setHours(0, 0, 0, 0);
+                return selectedDate >= today && !holidayDates.includes(info.startStr);
             },
+            events: fetchEvents,
             height: 'auto',
             contentHeight: 'auto',
             aspectRatio: 1.35,
@@ -81,12 +86,33 @@
         calendar.render();
     }
 
-    function loadTimeSlots(info) {
-        const courtsData = JSON.parse(document.getElementById('courts').textContent);
-        const resources = courtsData.map(court => ({
-            id: court.id,
-            title: court.courtName
-        }));
+function fetchEvents(fetchInfo, successCallback, failureCallback) {
+    fetch('/fetch_events/', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(events => {
+        successCallback(events);
+    })
+    .catch(error => {
+        console.error('Error fetching events:', error);
+        failureCallback(error);
+    });
+}
+
+function handleDateSelected(info) {
+    loadTimeSlots(info.dateStr);
+}
+
+function loadTimeSlots(dateStr) {
+    const courtsData = JSON.parse(document.getElementById('courts').textContent);
+    const resources = courtsData.map(court => ({
+        id: court.id,
+        title: court.courtName
+    }));
 
         if(calendar){
             if(calendar.view.type !== 'dayGridMonth' || calendar.view.type !== 'resourceTimelineDay' ){
@@ -197,22 +223,78 @@
         calendar.addEvent(tempEvent);
         calendar.render();
     }
+            handleEventCreation(startTime, endTime, courtId);
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Cannot select past dates.'
+            });
+        }
+    });
+
+    calendar.setOption('selectMirror', true);
+    calendar.gotoDate(dateStr);
+}
+
+function handleEventCreation(startTime, endTime, courtId) {
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
+
+    const formattedStartDate = startDate.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
+    });
+
+    const formattedEndDate = endDate.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
+    });
+
+    Swal.fire({
+        title: 'Confirm Booking',
+        html: `<p>Are you sure you want to make a booking from <strong>${formattedStartDate}</strong> to <strong>${formattedEndDate}</strong>?</p>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, book it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            var tempEvent = {
+                title: 'New Booking',
+                start: startTime,
+                end: endTime,
+                resourceId: courtId,
+                color: '#378006',
+                allDay: false
+            };
+
+            createBooking(tempEvent);
+        }
+    });
+}
 
     function createBooking() {
         const csrfToken = '{{ csrf_token }}';
         const bookings = new FormData();
         bookings.append('csrfmiddlewaretoken', csrfToken);
         const eventsArray = calendar.getEvents();
-        var tempEvents = eventsArray.filter(function(event) {
-            return event.extendedProps.tags && event.extendedProps.tags.includes('temp');
-        });
 
-        const serializedEvents = eventsArray.map(tempEvents => ({
+        const serializedEvents = eventsArray.map(event => ({
+            title: event.title,
             start: event.start.toISOString(),
             end: event.end ? event.end.toISOString() : null,
             resourceId: event.getResources().map(resource => resource.id),
-            tag: event.tag,
             color: event.backgroundColor,
+            allDay: event.allDay
         }));
 
         bookings.append('events', JSON.stringify(serializedEvents));
@@ -245,5 +327,5 @@
         console.log("sent");
     }
 
-</script> 
+</script>
 {% endblock js %}
