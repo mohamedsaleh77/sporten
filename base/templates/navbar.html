@@ -10,11 +10,11 @@
 
             <!-- Navigation Links -->
             <div class="hidden md:flex md:items-center md:gap-x-7">
-                <!-- <a class="inline-block text-black hover:text-gray-600" href="#">Sports</a> -->
-                <a class="inline-block text-black hover:text-gray-600" href="#">Venues</a>
-                <a class="inline-block text-black hover:text-gray-600" href="#events">Events</a>
-                <a class="inline-block text-black hover:text-gray-600" href="{% url 'about' %}">About</a>
-            </div>
+              <!-- <a class="inline-block text-black hover:text-gray-600" href="#">Sports</a> -->
+              <a class="inline-block text-black hover:text-gray-600" href="{% url 'load_home' %}#venues">Venues</a>
+              <a class="inline-block text-black hover:text-gray-600" href="{% url 'load_home' %}#events">Events</a>
+              <a class="inline-block text-black hover:text-gray-600" href="{% url 'about' %}">About</a>
+          </div>
         </div>
 
         <!-- Mobile Toggle Button -->

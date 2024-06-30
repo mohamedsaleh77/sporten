@@ -126,6 +126,36 @@
     {% endblock content %}
 
     {% block js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const accountButton = document.getElementById('account-button');
+            const accountMenu = document.getElementById('account-menu');
+
+            if (accountButton) {
+                accountButton.addEventListener('click', function() {
+                    const isExpanded = accountButton.getAttribute('aria-expanded') === 'true';
+                    accountButton.setAttribute('aria-expanded', !isExpanded);
+                    accountMenu.classList.toggle('show');
+                });
+
+                document.addEventListener('click', function(event) {
+                    if (!accountButton.contains(event.target) && !accountMenu.contains(event.target)) {
+                        accountButton.setAttribute('aria-expanded', 'false');
+                        accountMenu.classList.remove('show');
+                    }
+                });
+            }
+
+            // Smooth scroll to the section if the URL contains a hash
+            if (window.location.hash) {
+                const hash = window.location.hash.substring(1); // Remove the #
+                const element = document.getElementById(hash);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        });
+    </script>
     {% endblock js %}
 
 </body>
