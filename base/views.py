@@ -306,7 +306,7 @@ def admin_dashboard(request):
 @login_required
 @user_passes_test(is_admin)
 def admin_bookings(request):
-    bookings = BookingCourt.objects.select_related('booking__userID', 'court__venueID').all()
+    bookings = BookingCourt.objects.select_related('booking__userID', 'court__venueID').order_by('booking__bookTime').all()
     return render(request, 'adminpanel/bookings.html', {'bookings': bookings})
 
 

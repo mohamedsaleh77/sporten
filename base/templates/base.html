@@ -10,14 +10,13 @@
     <script src="https://cdn.jsdelivr.net/npm/preline@2.3.0/dist/preline.min.js"></script>
 
     <!-- Vue -->
-    <script src = "{% static 'js/vue.global.min.js' %}"></script>
+    <script src="{% static 'js/vue.global.min.js' %}"></script>
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <!-- Bootstrap JS and Popper.js -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
@@ -30,19 +29,19 @@
     {% block css %}
     <style>
         .carousel {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-}
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
-.carousel-inner {
-    height: 25vh; /* 25% of the viewport height */
-}
+        .carousel-inner {
+            height: 25vh; /* 25% of the viewport height */
+        }
 
-.carousel-item img {
-    object-fit: cover;
-    height: 100%;
-}
+        .carousel-item img {
+            object-fit: cover;
+            height: 100%;
+        }
 
         /* Navbar styling */
         .navbar {
@@ -53,35 +52,32 @@
             top: 0;
             z-index: 10;
         }
-    
+
         .navbar-brand img {
             height: 50px;
         }
-    
+
         .nav-link {
             color: black;
             font-weight: 500;
         }
-    
+
         .nav-link:hover {
             color: #0056b3;
         }
-    
+
         /* Dropdown styling */
         .dropdown-menu {
+            display: none;
             position: absolute;
             top: 100%;
             right: 0;
             z-index: 1000;
-            display: none;
-            float: left;
             min-width: 10rem;
             padding: 0.5rem 0;
             margin: 0.125rem 0 0;
             font-size: 1rem;
             color: #212529;
-            text-align: left;
-            list-style: none;
             background-color: #fff;
             background-clip: padding-box;
             border: 1px solid rgba(0, 0, 0, 0.15);
@@ -89,13 +85,11 @@
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175);
             transition: all 0.3s ease-in-out;
         }
-    
+
         .dropdown-menu.show {
             display: block;
-            opacity: 1;
-            visibility: visible;
         }
-    
+
         .dropdown-item {
             display: block;
             width: 100%;
@@ -108,7 +102,7 @@
             background-color: transparent;
             border: 0;
         }
-    
+
         .dropdown-item:hover,
         .dropdown-item:focus {
             color: #0056b3;

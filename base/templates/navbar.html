@@ -10,11 +10,11 @@
 
             <!-- Navigation Links -->
             <div class="hidden md:flex md:items-center md:gap-x-7">
-              <!-- <a class="inline-block text-black hover:text-gray-600" href="#">Sports</a> -->
-              <a class="inline-block text-black hover:text-gray-600" href="{% url 'load_home' %}#venues">Venues</a>
-              <a class="inline-block text-black hover:text-gray-600" href="{% url 'load_home' %}#events">Events</a>
-              <a class="inline-block text-black hover:text-gray-600" href="{% url 'about' %}">About</a>
-          </div>
+                <!-- <a class="inline-block text-black hover:text-gray-600" href="#">Sports</a> -->
+                <a class="inline-block text-black hover:text-gray-600" href="{% url 'load_home' %}#venues">Venues</a>
+                <a class="inline-block text-black hover:text-gray-600" href="{% url 'load_home' %}#events">Events</a>
+                <a class="inline-block text-black hover:text-gray-600" href="{% url 'about' %}">About</a>
+            </div>
         </div>
 
         <!-- Mobile Toggle Button -->
@@ -72,23 +72,3 @@
         </div>
     </nav>
 </header>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const accountButton = document.getElementById('account-button');
-        const accountMenu = document.getElementById('account-menu');
-
-        accountButton.addEventListener('click', function() {
-            const isExpanded = accountButton.getAttribute('aria-expanded') === 'true';
-            accountButton.setAttribute('aria-expanded', !isExpanded);
-            accountMenu.classList.toggle('show');
-        });
-
-        document.addEventListener('click', function(event) {
-            if (!accountButton.contains(event.target) && !accountMenu.contains(event.target)) {
-                accountButton.setAttribute('aria-expanded', 'false');
-                accountMenu.classList.remove('show');
-            }
-        });
-    });
-</script>
