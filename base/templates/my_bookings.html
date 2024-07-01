@@ -11,6 +11,7 @@
             <thead>
                 <tr>
                     <th>Booking ID</th>
+                    <th class="hidden">BookingCourts ID</th>
                     <th>Venue Name</th>
                     <th>Court Name</th>
                     <th>Start Time</th>
@@ -23,6 +24,7 @@
                 {% for booking_court in bookings %}
                 <tr>
                     <td>{{ booking_court.booking.bookingID }}</td>
+                    <td>{{ booking_court.id }}</td>
                     <td>{{ booking_court.court.venueID.venueName }}</td>
                     <td>{{ booking_court.court.courtName }}</td>
                     <td>{{ booking_court.startTime }}</td>
@@ -30,7 +32,7 @@
                     <td>{{ booking_court.booking.status }}</td>
                     <td>
                         {% if booking_court.startTime|timeuntil < '48:00:00' %}
-                            <button class="btn btn-primary btn-sm" onclick="editBooking('{{ booking_court.booking.bookingID }}')">Edit</button>
+                            <button class="btn btn-primary btn-sm" onclick="editBooking('{{ booking_court.id }}')">Edit</button>
                         {% endif %}
                     </td>
                 </tr>
@@ -54,7 +56,13 @@
     });
 
     function editBooking(bookingId) {
-        window.location.href = "{% url 'user_update_booking' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', bookingId);
+        console.log("Editing booking with ID:", bookingId);  // Debugging line
+
+        // Ensure URL is correctly resolved
+        var url = "{% url 'user_update_booking' '00000000-0000-0000-0000-000000000000' %}".replace('00000000-0000-0000-0000-000000000000', bookingId);
+        console.log("Navigating to URL:", url);  // Debugging line
+
+        window.location.href = url;
     }
 </script>
 {% endblock %}

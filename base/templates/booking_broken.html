@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block css %}
+
+    <style>
+        #calendar {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 10px;
+        }
+    </style>
+{% endblock css %}
+
+{% block headerjs %}
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.13/index.global.min.js'></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCalendar();
+        });
+    </script>
+{% endblock headerjs %}
+
+{% block content %}
+    {{ courts|json_script:"courts"|safe }}
+    {{ holidays|json_script:"holidays"|safe }}
+    {{ venue|json_script:"venue"|safe }}
+
+    <div id="calendar"></div>
+
+{% endblock content %}
+
+{% block js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCalendar();
+        window.addEventListener('resize', function() {
+            if (calendar) {
+                calendar.updateSize();
+            }
+        });
+    });
+
+    function loadCalendar() {
+        const holidayData = JSON.parse(document.getElementById('holidays').textContent);
+        var holidayDates = Object.values(holidayData).map(holiday => holiday.holidayDate);
+
+        if(calendar){
+            if(calendar.view.type !== 'dayGridMonth'){
+                calendar.destroy();
+            }
+        }
+
+        calendarEl = document.getElementById('calendar');
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
+            initialView: 'dayGridMonth',
+            selectable: true,
+            dateClick: function(info) {
+                var today = new Date().setHours(0, 0, 0, 0);
+                var selectedDate = new Date(info.dateStr).setHours(0, 0, 0, 0);
+                if (selectedDate >= today) {
+                    handleDateSelected(info);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Cannot select past dates.'
+                    });
+                }
+            },
+            selectAllow: function(info) {
+                var today = new Date().setHours(0, 0, 0, 0);
+                var selectedDate = new Date(info.startStr).setHours(0, 0, 0, 0);
+                return selectedDate >= today && !holidayDates.includes(info.startStr);
+            },
+            events: fetchEvents,
+            height: 'auto',
+            contentHeight: 'auto',
+            aspectRatio: 1.35,
+            windowResize: function(view) {
+                calendar.updateSize(); // Update calendar size on window resize
+            }
+        });
+
+        calendar.render();
+    }
+
+function fetchEvents(fetchInfo, successCallback, failureCallback) {
+    fetch('/fetch_events/', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(events => {
+        successCallback(events);
+    })
+    .catch(error => {
+        console.error('Error fetching events:', error);
+        failureCallback(error);
+    });
+}
+
+function handleDateSelected(info) {
+    loadTimeSlots(info.dateStr);
+}
+
+function loadTimeSlots(dateStr) {
+    const courtsData = JSON.parse(document.getElementById('courts').textContent);
+    const resources = courtsData.map(court => ({
+        id: court.id,
+        title: court.courtName
+    }));
+
+        if(calendar){
+            if(calendar.view.type !== 'dayGridMonth' || calendar.view.type !== 'resourceTimelineDay' ){
+                calendar.destroy();
+            }
+        }
+
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
+            initialView: 'resourceTimelineDay', 
+            scrollTime: courtsData[0].opening,
+            slotMinTime: courtsData[0].opening,
+            slotMaxTime: courtsData[0].closing,
+            resources: resources,
+            timeZone: 'UTC',
+            selectable: true,
+            selectOverlap: false,
+            selectMirror: true,
+            select: function(info){
+                var startTime = info.startStr;
+                var endTime = info.endStr;
+                var courtId = info.resource.id;
+
+                handleEventCreation(startTime, endTime, courtId, tag='temp');
+            },
+            eventOverlap: false,
+            aspectRatio: 1.35,
+            height: 'auto',
+            contentHeight: 'auto',
+            aspectRatio: 1.35,
+            windowResize: function(view) {
+                calendar.updateSize(); // Update calendar size on window resize
+            },
+        })
+        calendar.gotoDate(info);
+        calendar.render();
+        populateTimeline(info);
+    }
+
+    function handleDateSelected(info) {
+        if (calendar.view.type === 'dayGridMonth') {
+            loadTimeSlots(info);  // Pass selected date to loadTimeSlots
+        } 
+    }
+
+    async function populateTimeline(date) {
+        const venueData = JSON.parse(document.getElementById('venue').textContent);
+        const venue = venueData.id;
+        
+        console.log('Sending request with date:', date, 'and venue:', venue);
+        
+        $.ajax({
+            url: '/populate_timeline/',
+            method: 'GET',
+            headers: { 
+                'X-CSRFToken': '{{ csrf_token }}' 
+            },
+            data: {
+                date: date,
+                venue: venue
+            },
+            dataType: 'json',
+            success: function(data) {
+                console.log('Response data:', data); // process the bookings data here
+                if(data.events){
+                    data.events.forEach(event =>{
+                        console.log(event);
+                        handleEventCreation(event.startTime, event.endTime, event.courtID, tag='perm')
+                    });
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX Error:', error);
+                console.error('Response:', xhr.responseText);
+            }
+        });
+
+    }
+
+    function handleEventCreation(startTime, endTime, courtId, tag) {
+        if(tag == 'temp'){
+            // 1. Create temporary event
+            var tempEvent = {
+                start: startTime,
+                end: endTime,
+                resourceId: courtId,
+                color: '#5663A8', // Event color
+                allDay: false,
+                editable: true,
+                resourceEditable:true,
+                tag: 'temp',
+            };
+                // Send to Django to save into session
+        }
+        else{
+            var tempEvent = {
+                start: startTime,
+                end: endTime,
+                resourceId: courtId,
+                color: '#909090', // Event color
+                allDay: false,
+                editable: false,
+                droppable: false,
+                tag: 'perm',
+            };
+        }
+        
+        calendar.addEvent(tempEvent);
+        calendar.render();
+    }
+            handleEventCreation(startTime, endTime, courtId);
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Cannot select past dates.'
+            });
+        }
+    });
+
+    calendar.setOption('selectMirror', true);
+    calendar.gotoDate(dateStr);
+}
+
+function handleEventCreation(startTime, endTime, courtId) {
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
+
+    const formattedStartDate = startDate.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
+    });
+
+    const formattedEndDate = endDate.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
+    });
+
+    Swal.fire({
+        title: 'Confirm Booking',
+        html: `<p>Are you sure you want to make a booking from <strong>${formattedStartDate}</strong> to <strong>${formattedEndDate}</strong>?</p>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, book it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            var tempEvent = {
+                title: 'New Booking',
+                start: startTime,
+                end: endTime,
+                resourceId: courtId,
+                color: '#378006',
+                allDay: false
+            };
+
+            createBooking(tempEvent);
+        }
+    });
+}
+
+    function createBooking() {
+        const csrfToken = '{{ csrf_token }}';
+        const bookings = new FormData();
+        bookings.append('csrfmiddlewaretoken', csrfToken);
+        const eventsArray = calendar.getEvents();
+
+        const serializedEvents = eventsArray.map(event => ({
+            title: event.title,
+            start: event.start.toISOString(),
+            end: event.end ? event.end.toISOString() : null,
+            resourceId: event.getResources().map(resource => resource.id),
+            color: event.backgroundColor,
+            allDay: event.allDay
+        }));
+
+        bookings.append('events', JSON.stringify(serializedEvents));
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/create_booking/', true);
+        xhr.send(bookings);
+        console.log("sent");
+    }   
+
+
+    function createBooking_sameh(){
+        const csrfToken = '{{ csrf_token }}';
+        const bookings = new FormData();
+        bookings.append('csrfmiddlewaretoken', csrfToken);
+        eventsArray = calendar.getEvents();
+        // Save events from calendar
+        const serializedEvents = eventsArray.map(event => ({
+            title: event.title,
+            start: event.start.toISOString(), // Convert to ISO string format
+            end: event.end ? event.end.toISOString() : null, // Convert to ISO string format if end exists
+            resourceId: event.getResources().map(resource => resource.id), // Convert to array of resource IDs
+            color: event.backgroundColor, // Assuming color is stored in backgroundColor
+            allDay: event.allDay
+        }));
+
+        bookings.append('events', JSON.stringify(serializedEvents));
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/create_booking/', true);
+        xhr.send(bookings);
+        console.log("sent");
+    }
+
+</script>
+{% endblock js %}
