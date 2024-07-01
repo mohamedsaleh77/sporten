@@ -527,14 +527,16 @@ def update_venue(request, venue_id):
         form = VenueForm(instance=venue)
     return render(request, 'adminpanel/venue_form.html', {'form': form, 'title': 'Edit Venue'})
 
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
-def delete_venue(request, venue_id):
-    venue = get_object_or_404(Venue, id=venue_id)
-    if request.method == 'POST':
-        venue.delete()
-        return redirect('admin_venues')
-    return render(request, 'adminpanel/venue_confirm_delete.html', {'venue': venue})
+# @login_required
+# @user_passes_test(lambda u: u.is_superuser)
+# def delete_venue(request, venue_id):
+#     venue = get_object_or_404(Venue, id=venue_id)
+#     if request.method == 'POST':
+#         venue.delete()
+#         return redirect('admin_venues')
+#     return render(request, 'adminpanel/venue_confirm_delete.html', {'venue': venue})
+
+
 
 @login_required
 @user_passes_test(is_admin)
@@ -606,12 +608,12 @@ def delete_court(request, court_id):
 #         form = VenueForm(instance=venue)
 #     return render(request, 'adminpanel/venue_form.html', {'form': form})
 
-# @login_required
-# @user_passes_test(is_admin)
-# def delete_venue(request, venue_id):
-#     venue = get_object_or_404(Venue, id=venue_id)
-#     venue.delete()
-#     return redirect('admin_venues')
+@login_required
+@user_passes_test(is_admin)
+def delete_venue(request, venue_id):
+    venue = get_object_or_404(Venue, id=venue_id)
+    venue.delete()
+    return redirect('admin_venues')
 
 
 @login_required
@@ -923,3 +925,10 @@ def delete_banner(request, banner_id):
         banner.delete()
         return redirect('admin_banners')
     return render(request, 'adminpanel/banner_confirm_delete.html', {'banner': banner})
+
+# @login_required
+# @user_passes_test(is_admin)
+# def delete_court(request, court_id):
+#     court = get_object_or_404(Court, id=court_id)
+#     court.delete()
+#     return redirect('admin_courts')
